@@ -52,12 +52,12 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 	}
 
 	_, err := c.useCase.getByEmail(req.Email)
-	if err != nil {
+	if err == nil {
 		return nil, err
 	}
 
 	_, err = c.useCase.getByUsername(req.Username)
-	if err != nil {
+	if err == nil {
 		return nil, err
 	}
 
@@ -73,7 +73,6 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 	if err != nil {
 		return nil, err
 	}
-
 	result := &web.UserResponse{
 		Status: "Success",
 		Data: web.ItemResponse{
@@ -81,6 +80,7 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 			Username: user.Username,
 			Fullname: user.Fullname,
 			Email:    user.Email,
+			IsActive: user.Active,
 		},
 	}
 	return result, nil
