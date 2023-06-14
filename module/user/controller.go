@@ -2,7 +2,6 @@ package user
 
 import (
 	"errors"
-	"fmt"
 	"regexp"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
@@ -83,17 +82,16 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 		return nil, err
 	}
 
-	data, _ := c.useCase.getUserAndRole(role.ID)
-	fmt.Println(data)
+	data, _ := c.useCase.getUserAndRole(user.ID)
 	result := &web.UserResponse{
 		Status: "Success",
 		Data: web.ItemResponse{
-			ID:       data.User.ID,
-			Username: data.User.Username,
-			Fullname: data.User.Fullname,
-			Email:    data.User.Email,
-			IsActive: data.User.Active,
-			Role:     data.Name,
+			ID:       data.ID,
+			Username: data.Username,
+			Fullname: data.Fullname,
+			Email:    data.Email,
+			IsActive: data.Active,
+			Role:     data.Role.Name,
 		},
 	}
 	return result, nil
