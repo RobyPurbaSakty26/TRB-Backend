@@ -9,4 +9,6 @@ type ItemResponse struct {
 	Username string `json:"username"`
 	Fullname string `json:"fullname"`
 	Email    string `json:"email"`
+	IsActive bool   `json:"is_active"`
+	Role     string `json:"role"`
 }
