@@ -8,6 +8,8 @@ type UseCase struct {
 
 type UseCaseInterface interface {
 	create(user *entity.User) error
+	getByEmail(email string) (*entity.User, error)
+	getByUsername(username string) (*entity.User, error)
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -16,4 +18,12 @@ func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
 
 func (u UseCase) create(user *entity.User) error {
 	return u.repo.save(user)
+}
+
+func (u UseCase) getByEmail(email string) (*entity.User, error) {
+	return u.repo.getByEmail(email)
+}
+
+func (u UseCase) getByUsername(username string) (*entity.User, error) {
+	return u.repo.getByUsername(username)
 }
