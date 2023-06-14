@@ -1,6 +1,7 @@
 package user
 
 import (
+	"fmt"
 	"trb-backend/module/entity"
 
 	"gorm.io/gorm"
@@ -14,6 +15,8 @@ type UserRepositoryInterface interface {
 	save(user *entity.User) error
 	getByEmail(email string) (*entity.User, error)
 	getByUsername(username string) (*entity.User, error)
+	createRole(role *entity.Role) error
+	getUserAndRole(id uint) (*entity.Role, error)
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
@@ -40,4 +43,20 @@ func (r repository) getByUsername(username string) (*entity.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r repository) createRole(role *entity.Role) error {
+	return r.db.Create(role).Error
+}
+
+func (r repository) getUserAndRole(id uint) (*entity.Role, error) {
+	var role entity.Role
+	//err := r.db.Preload("Users").Find(&role, id).Error
+	//err := r.db.Joins("roles").First(&role, id).Error
+	err := r.db.Raw("select * from users join roles on users.role_id = roles.id where roles.id = ?", id).Scan(&role).Error
+	if err != nil {
+		return nil, err
+	}
+	fmt.Println("id", id, &role)
+	return &role, nil
 }
