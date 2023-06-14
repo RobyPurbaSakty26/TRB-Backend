@@ -51,36 +51,47 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
 	}
 
-	_, err := c.useCase.getByEmail(req.Email)
-	if err == nil {
-		return nil, err
-	}
-
-	_, err = c.useCase.getByUsername(req.Username)
-	if err == nil {
-		return nil, err
-	}
+	//_, err := c.useCase.getByEmail(req.Email)
+	//if err == nil {
+	//	return nil, err
+	//}
+	//
+	//_, err = c.useCase.getByUsername(req.Username)
+	//if err == nil {
+	//	return nil, err
+	//}
 
 	hashPass, _ := helpers.HashPass(req.Password)
+
+	role := entity.Role{
+		Name: "user",
+	}
+	err := c.useCase.createRoleUser(&role)
+	if err != nil {
+		return nil, err
+	}
 	user := entity.User{
 		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashPass,
+		RoleId:   role.ID,
 	}
-
 	err = c.useCase.create(&user)
 	if err != nil {
 		return nil, err
 	}
+
+	data, _ := c.useCase.getUserAndRole(user.ID)
 	result := &web.UserResponse{
 		Status: "Success",
 		Data: web.ItemResponse{
-			ID:       user.ID,
-			Username: user.Username,
-			Fullname: user.Fullname,
-			Email:    user.Email,
-			IsActive: user.Active,
+			ID:       data.ID,
+			Username: data.Username,
+			Fullname: data.Fullname,
+			Email:    data.Email,
+			IsActive: data.Active,
+			Role:     data.Role.Name,
 		},
 	}
 	return result, nil

@@ -10,4 +10,5 @@ type User struct {
 	Password string `json:"password"`
 	RoleId   uint   `json:"role_id"`
 	Active   bool   `json:"active"`
+	Role     Role
 }
