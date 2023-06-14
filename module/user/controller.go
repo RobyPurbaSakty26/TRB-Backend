@@ -1,6 +1,7 @@
 package user
 
 import (
+	"trb-backend/helpers"
 	"trb-backend/module/entity"
 	"trb-backend/module/web"
 )
@@ -20,11 +21,12 @@ func NewController(usecase UseCaseInterface) ControllerUserInterface {
 }
 
 func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error) {
+	hashPass, _ := helpers.HashPass(req.Password)
 	user := entity.User{
 		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
-		Password: req.Password,
+		Password: hashPass,
 	}
 
 	err := c.useCase.create(&user)
