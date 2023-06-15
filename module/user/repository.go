@@ -50,7 +50,7 @@ func (r repository) createRole(role *entity.Role) error {
 
 func (r repository) getUserAndRole(id uint) (*entity.User, error) {
 	var user entity.User
-	err := r.db.Preload("Role").Find(&user, id).Error
+	err := r.db.Preload("Role").First(&user, id).Error
 	if err != nil {
 		return nil, err
 	}
