@@ -53,7 +53,7 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 
 	_, err := c.useCase.getByEmail(req.Email)
 	if err == nil {
-		return nil, errors.New("Umail already registered")
+		return nil, errors.New("Email already registered")
 	}
 
 	_, err = c.useCase.getByUsername(req.Username)
