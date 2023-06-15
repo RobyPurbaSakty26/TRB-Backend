@@ -3,8 +3,10 @@ package user
 import (
 	"errors"
 	"regexp"
+	"strconv"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
+	"trb-backend/module/middleware"
 	"trb-backend/module/web"
 )
 
@@ -16,6 +18,7 @@ type ControllerUserInterface interface {
 	create(req *web.UserCreateRequest) (*web.UserResponse, error)
 	getByEmail(email string) (*web.UserResponse, error)
 	getByUsername(username string) (*web.UserResponse, error)
+	login(req *web.LoginRequest) (*web.LoginResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -132,5 +135,34 @@ func (c controller) getByUsername(username string) (*web.UserResponse, error) {
 			Email:    data.Email,
 		},
 	}
+	return res, nil
+}
+
+func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
+	data, err := c.useCase.getByUsername(req.Username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
+	if err != nil {
+		return nil, err
+	}
+	secret := "secret-key"
+
+	token, err := middleware.GenerateToken(strconv.FormatUint(uint64(data.ID), 10), data.Username, strconv.FormatUint(uint64(data.RoleId), 10), secret)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &web.LoginResponse{
+		Status: "Success",
+		Data: web.LoginItemsResponse{
+			Token:    token,
+			IsActive: data.Active,
+		},
+	}
+
 	return res, nil
 }
