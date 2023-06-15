@@ -19,6 +19,7 @@ type ControllerUserInterface interface {
 	getByEmail(email string) (*web.UserResponse, error)
 	getByUsername(username string) (*web.UserResponse, error)
 	login(req *web.LoginRequest) (*web.LoginResponse, error)
+	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -165,4 +166,33 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	}
 
 	return res, nil
+}
+
+func (c controller) updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error) {
+	data, err := c.useCase.getByEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &entity.User{
+		Password: data.Password,
+		Email:    data.Email,
+	}
+
+	newPassword, err := helpers.HashPass(req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.useCase.updatePassword(user, newPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &web.UpdatePasswordResponse{
+		Status:  "Success",
+		Message: "Password changed successfully",
+	}
+	return res, nil
+
 }
