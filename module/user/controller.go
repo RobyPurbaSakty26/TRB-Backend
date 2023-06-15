@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
 	"trb-backend/module/middleware"
@@ -155,20 +156,32 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 		return nil, err
 	}
 
+	if data.Active != true {
+		return nil, errors.New("The account is not yet activated")
+	}
+
 	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
 	if err != nil {
 		return nil, errors.New("Wrong password")
 	}
 
 	// melihat selisih waktu
-	// lastUpdate := data.UpdatedAt
-	// current := time.Now()
-	// gap := current.Sub(lastUpdate)
-	// hour := gap.Hours()
+	lastUpdate := data.UpdatedAt
+	current := time.Now()
+	gap := current.Sub(lastUpdate)
+	hour := gap.Hours()
 
-	// if hour > 2 {
-	// 	c.useCase.
-	// }
+	user := &entity.User{
+		Email:      data.Email,
+		InputFalse: data.InputFalse,
+	}
+
+	if hour > 2 {
+		err := c.useCase.updateInputFalse(user, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	secret := os.Getenv("SECRET_KEY")
 
