@@ -2,10 +2,16 @@ package user
 
 import (
 	"errors"
+	"log"
+	"os"
 	"regexp"
+	"strconv"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
+	"trb-backend/module/middleware"
 	"trb-backend/module/web"
+
+	"github.com/joho/godotenv"
 )
 
 type controller struct {
@@ -16,6 +22,8 @@ type ControllerUserInterface interface {
 	create(req *web.UserCreateRequest) (*web.UserResponse, error)
 	getByEmail(email string) (*web.UserResponse, error)
 	getByUsername(username string) (*web.UserResponse, error)
+	login(req *web.LoginRequest) (*web.LoginResponse, error)
+	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -133,4 +141,78 @@ func (c controller) getByUsername(username string) (*web.UserResponse, error) {
 		},
 	}
 	return res, nil
+}
+
+func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	data, err := c.useCase.getByUsername(req.Username)
+
+	if err != nil {
+		return nil, err
+	}
+
+	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
+	if err != nil {
+		return nil, errors.New("Wrong password")
+	}
+
+	// melihat selisih waktu
+	// lastUpdate := data.UpdatedAt
+	// current := time.Now()
+	// gap := current.Sub(lastUpdate)
+	// hour := gap.Hours()
+
+	// if hour > 2 {
+	// 	c.useCase.
+	// }
+
+	secret := os.Getenv("SECRET_KEY")
+
+	token, err := middleware.GenerateToken(strconv.FormatUint(uint64(data.ID), 10), data.Username, strconv.FormatUint(uint64(data.RoleId), 10), secret)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &web.LoginResponse{
+		Status: "Success",
+		Data: web.LoginItemsResponse{
+			Token:    token,
+			IsActive: data.Active,
+		},
+	}
+
+	return res, nil
+}
+
+func (c controller) updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error) {
+	data, err := c.useCase.getByEmail(req.Email)
+	if err != nil {
+		return nil, err
+	}
+
+	user := &entity.User{
+		Password: data.Password,
+		Email:    data.Email,
+	}
+
+	newPassword, err := helpers.HashPass(req.Password)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.useCase.updatePassword(user, newPassword)
+	if err != nil {
+		return nil, err
+	}
+
+	res := &web.UpdatePasswordResponse{
+		Status:  "Success",
+		Message: "Password changed successfully",
+	}
+	return res, nil
+
 }

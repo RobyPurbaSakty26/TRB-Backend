@@ -16,6 +16,8 @@ type RequestHandlerInterface interface {
 	Create(c *gin.Context)
 	GetByEmail(c *gin.Context)
 	GetByUsername(c *gin.Context)
+	Login(c *gin.Context)
+	UpdatePassword(c *gin.Context)
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -81,5 +83,38 @@ func (h RequestHandler) GetByUsername(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Fail", Message: err.Error()})
 	}
 
+	c.JSON(http.StatusOK, res)
+}
+
+func (h RequestHandler) Login(c *gin.Context) {
+	var req web.LoginRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Message: err.Error(), Status: "Fail"})
+		return
+	}
+
+	res, err := h.ctrl.login(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Message: err.Error(), Status: "Fail"})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h RequestHandler) UpdatePassword(c *gin.Context) {
+	var req web.UpdatePasswordRequest
+
+	if err := c.BindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Message: err.Error(), Status: "Fail"})
+		return
+	}
+
+	res, err := h.ctrl.updatePassword(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
 	c.JSON(http.StatusOK, res)
 }

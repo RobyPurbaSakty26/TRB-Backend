@@ -16,6 +16,8 @@ type UserRepositoryInterface interface {
 	getByUsername(username string) (*entity.User, error)
 	createRole(role *entity.Role) error
 	getUserAndRole(id uint) (*entity.User, error)
+	updatePassword(user *entity.User, password string) error
+	updateInputFalse(user *entity.User, count int) error
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
@@ -55,4 +57,12 @@ func (r repository) getUserAndRole(id uint) (*entity.User, error) {
 		return nil, err
 	}
 	return &user, nil
+}
+
+func (r repository) updatePassword(user *entity.User, password string) error {
+	return r.db.Model(user).Where("email = ?", user.Email).Update("password", password).Error
+}
+
+func (r repository) updateInputFalse(user *entity.User, count int) error {
+	return r.db.Model(user).Where(" email = ? ", user.Email).Update("input_false", count).Error
 }

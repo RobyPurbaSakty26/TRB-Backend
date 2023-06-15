@@ -8,4 +8,5 @@ type Access struct {
 	Resource string `json:"resource"`
 	CanRead  bool   `json:"can_read"`
 	CanWrite bool   `json:"can_write"`
+	Role     Role
 }

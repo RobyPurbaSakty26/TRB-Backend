@@ -1,6 +1,8 @@
 package user
 
-import "trb-backend/module/entity"
+import (
+	"trb-backend/module/entity"
+)
 
 type UseCase struct {
 	repo UserRepositoryInterface
@@ -12,6 +14,8 @@ type UseCaseInterface interface {
 	getByUsername(username string) (*entity.User, error)
 	createRoleUser(role *entity.Role) error
 	getUserAndRole(id uint) (*entity.User, error)
+	updatePassword(user *entity.User, password string) error
+	updateInputFalse(user *entity.User, count int) error
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -35,4 +39,12 @@ func (u UseCase) createRoleUser(role *entity.Role) error {
 }
 func (u UseCase) getUserAndRole(id uint) (*entity.User, error) {
 	return u.repo.getUserAndRole(id)
+}
+
+func (u UseCase) updatePassword(user *entity.User, password string) error {
+	return u.repo.updatePassword(user, password)
+}
+
+func (u UseCase) updateInputFalse(user *entity.User, count int) error {
+	return u.repo.updateInputFalse(user, count)
 }
