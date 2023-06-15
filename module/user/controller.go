@@ -51,22 +51,22 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
 	}
 
-	//_, err := c.useCase.getByEmail(req.Email)
-	//if err == nil {
-	//	return nil, err
-	//}
-	//
-	//_, err = c.useCase.getByUsername(req.Username)
-	//if err == nil {
-	//	return nil, err
-	//}
+	_, err := c.useCase.getByEmail(req.Email)
+	if err == nil {
+		return nil, errors.New("Email already registered")
+	}
+
+	_, err = c.useCase.getByUsername(req.Username)
+	if err == nil {
+		return nil, errors.New("Username already registered")
+	}
 
 	hashPass, _ := helpers.HashPass(req.Password)
 
 	role := entity.Role{
 		Name: "user",
 	}
-	err := c.useCase.createRoleUser(&role)
+	err = c.useCase.createRoleUser(&role)
 	if err != nil {
 		return nil, err
 	}
