@@ -1,6 +1,7 @@
 package router
 
 import (
+	"github.com/gin-contrib/cors"
 	"log"
 	"trb-backend/config"
 	"trb-backend/module/user"
@@ -14,6 +15,12 @@ func SetupRouter() *gin.Engine {
 		log.Fatalln(err)
 	}
 	r := gin.Default()
+
+	r.Use(cors.New(cors.Config{
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
+		AllowHeaders:     []string{"Authorization"},
+		AllowCredentials: true,
+	}))
 
 	userHandler := user.DefaultRequestHandler(db)
 
