@@ -36,7 +36,7 @@ func GenerateToken(id, username, role, secret string) (string, error) {
 type PayloadJWT struct {
 	ID       string
 	username string
-	Role     string
+	RoleID   string
 }
 
 func verifyJWT(tokenString, secret string) (*PayloadJWT, error) {
@@ -60,7 +60,7 @@ func verifyJWT(tokenString, secret string) (*PayloadJWT, error) {
 
 		ID:       userID,
 		username: userName,
-		Role:     role,
+		RoleID:   role,
 	}
 
 	return &data, nil
@@ -82,7 +82,7 @@ func AuthMiddleware(c *gin.Context) {
 	data := PayloadJWT{
 		ID:       token.ID,
 		username: token.username,
-		Role:     token.Role,
+		RoleID:   token.RoleID,
 	}
 
 	c.Set("data", data)

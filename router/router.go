@@ -20,6 +20,8 @@ func SetupRouter() *gin.Engine {
 	r.POST("/register", userHandler.Create)
 	r.GET("/user/email", userHandler.GetByEmail)
 	r.GET("/user/username", userHandler.GetByUsername)
+	r.POST("/login", userHandler.Login)
+	r.PATCH("/user/forgot-password", userHandler.UpdatePassword)
 
 	return r
 }

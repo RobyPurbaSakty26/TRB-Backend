@@ -12,11 +12,15 @@ func HashPass(p string) (string, error) {
 	return string(hash), err
 }
 
-func ComparePass(h, p []byte) bool {
+func ComparePass(h, p []byte) error {
 	hash, pass := []byte(h), []byte(p)
 	err := bcrypt.CompareHashAndPassword(hash, pass)
 
-	return err == nil
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 //end feature : register
