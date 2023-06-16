@@ -1,4 +1,4 @@
-package web
+package helpers
 
 /**
  * Created by Goland & VS Code.
@@ -10,9 +10,8 @@ package web
  * Description: BRI-CMP-Service-Backend
  **/
 
-type UserCreateRequest struct {
-	Fullname string `json:"fullname"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	Password string `json:"password"`
+func PanicIfError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }

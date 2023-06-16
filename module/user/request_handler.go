@@ -8,6 +8,16 @@ import (
 	"gorm.io/gorm"
 )
 
+/**
+ * Created by Goland & VS Code.
+ * User : 1. Roby Purba Sakty 			: obykao26@gmail.com
+		  2. Muhammad Irfan 			: mhd.irfann00@gmail.com
+   		  3. Andre Rizaldi Brillianto	: andrerizaldib@gmail.com
+ * Date: Saturday, 12 Juni 2023
+ * Time: 08.30 AM
+ * Description: BRI-CMP-Service-Backend
+ **/
+
 type RequestHandler struct {
 	ctrl ControllerUserInterface
 }
@@ -18,6 +28,7 @@ type RequestHandlerInterface interface {
 	GetByUsername(c *gin.Context)
 	Login(c *gin.Context)
 	UpdatePassword(c *gin.Context)
+	GetAllUsers(c *gin.Context)
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -117,4 +128,14 @@ func (h RequestHandler) UpdatePassword(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+func (h *RequestHandler) GetAllUsers(c *gin.Context) {
+	users, err := h.ctrl.getAllUsers()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "data": users})
 }

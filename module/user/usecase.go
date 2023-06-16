@@ -4,6 +4,16 @@ import (
 	"trb-backend/module/entity"
 )
 
+/**
+ * Created by Goland & VS Code.
+ * User : 1. Roby Purba Sakty 			: obykao26@gmail.com
+		  2. Muhammad Irfan 			: mhd.irfann00@gmail.com
+   		  3. Andre Rizaldi Brillianto	: andrerizaldib@gmail.com
+ * Date: Saturday, 12 Juni 2023
+ * Time: 08.30 AM
+ * Description: BRI-CMP-Service-Backend
+ **/
+
 type UseCase struct {
 	repo UserRepositoryInterface
 }
@@ -16,6 +26,7 @@ type UseCaseInterface interface {
 	getUserAndRole(id uint) (*entity.User, error)
 	updatePassword(user *entity.User, password string) error
 	updateInputFalse(user *entity.User, count int) error
+	getAllUsers() ([]*entity.User, error)
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -47,4 +58,8 @@ func (u UseCase) updatePassword(user *entity.User, password string) error {
 
 func (u UseCase) updateInputFalse(user *entity.User, count int) error {
 	return u.repo.updateInputFalse(user, count)
+}
+
+func (u UseCase) getAllUser() ([]*entity.User, error) {
+	return u.repo.getAllUsers()
 }
