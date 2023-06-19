@@ -17,6 +17,7 @@ func SetupRouter() *gin.Engine {
 
 	userHandler := user.DefaultRequestHandler(db)
 
+	AdminRoutes(r, db)
 	r.POST("/register", userHandler.Create)
 	r.GET("/user/email", userHandler.GetByEmail)
 	r.GET("/user/username", userHandler.GetByUsername)
