@@ -11,7 +11,6 @@ type useCase struct {
 
 type UseCaseAdminInterface interface {
 	getAllUser() ([]entity.User, error)
-	getUserWithRoleAccess(id string) (*entity.User, error)
 	updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
@@ -25,10 +24,6 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 
 func (u useCase) getAllUser() ([]entity.User, error) {
 	return u.repo.getAllUser()
-}
-
-func (u useCase) getUserWithRoleAccess(id string) (*entity.User, error) {
-	return u.repo.getUserWithRoleAccess(id)
 }
 
 func (u useCase) updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error {

@@ -45,7 +45,7 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 
 	result, err := h.ctrl.getRoleUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusNotFound, web.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 

@@ -47,7 +47,6 @@ func (c controller) getAllUser() (*web.AllUserResponse, error) {
 
 func (c controller) getRoleUser(id string) (*web.RoleUserResponse, error) {
 	data, err := c.useCase.getUserWithRole(id)
-	//data, err := c.useCase.getUserWithRoleAccess(id)
 	if err != nil {
 		return nil, err
 	}

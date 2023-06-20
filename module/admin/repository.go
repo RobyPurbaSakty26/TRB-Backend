@@ -12,7 +12,6 @@ type repository struct {
 
 type AdminRepositoryInterface interface {
 	getAllUser() ([]entity.User, error)
-	getUserWithRoleAccess(id string) (*entity.User, error)
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
 	updateAccess(access *entity.Access, request *web.AccessRequest, id uint) error
@@ -29,14 +28,6 @@ func (r repository) getAllUser() ([]entity.User, error) {
 		return nil, err
 	}
 	return user, nil
-}
-func (r repository) getUserWithRoleAccess(id string) (*entity.User, error) {
-	var users entity.User
-	err := r.db.Preload("Role.Access").Preload("Role").First(&users, "role_id = ?", id).Error
-	if err != nil {
-		return nil, err
-	}
-	return &users, nil
 }
 func (r repository) getUserWithRole(id string) (*entity.User, error) {
 	var users entity.User
