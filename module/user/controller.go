@@ -15,6 +15,16 @@ import (
 	"github.com/joho/godotenv"
 )
 
+/**
+ * Created by Goland & VS Code.
+ * User : 1. Roby Purba Sakty 			: obykao26@gmail.com
+		  2. Muhammad Irfan 			: mhd.irfann00@gmail.com
+   		  3. Andre Rizaldi Brillianto	: andrerizaldib@gmail.com
+ * Date: Saturday, 12 Juni 2023
+ * Time: 08.30 AM
+ * Description: BRI-CMP-Service-Backend
+ **/
+
 type controller struct {
 	useCase UseCaseInterface
 }
@@ -25,6 +35,7 @@ type ControllerUserInterface interface {
 	getByUsername(username string) (*web.UserResponse, error)
 	login(req *web.LoginRequest) (*web.LoginResponse, error)
 	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
+	getAllUsers() (*web.AllUserResponse, error)
 	UserApprove(id int) (*web.UserApproveResponse, error)
 }
 
@@ -286,4 +297,29 @@ func (c controller) UserApprove(id int) (*web.UserApproveResponse, error) {
 		},
 	}
 	return res, nil
+}
+
+func (c controller) getAllUsers() (*web.AllUserResponse, error) {
+	users, err := c.useCase.getAllUsers()
+	if err != nil {
+		return nil, err
+	}
+
+	var userResponses []web.ItemResponse
+	for _, user := range users {
+		userResponses = append(userResponses, web.ItemResponse{
+			ID:       user.ID,
+			Fullname: user.Fullname,
+			Username: user.Username,
+			Email:    user.Email,
+			IsActive: user.Active,
+		})
+	}
+
+	response := &web.AllUserResponse{
+		Status: "Success",
+		Data:   userResponses,
+	}
+
+	return response, nil
 }
