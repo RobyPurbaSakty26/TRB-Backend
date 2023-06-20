@@ -1,8 +1,4 @@
-package entity
-
-import (
-	"gorm.io/gorm"
-)
+package helpers
 
 /**
  * Created by Goland & VS Code.
@@ -14,8 +10,8 @@ import (
  * Description: BRI-CMP-Service-Backend
  **/
 
-type Role struct {
-	gorm.Model
-	Name     string   `json:"name"`
-	Accesses []Access `json:"accesses"`
+func PanicIfError(err error) {
+	if err != nil {
+		panic(err)
+	}
 }
