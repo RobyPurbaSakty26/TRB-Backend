@@ -34,7 +34,6 @@ type RequestHandlerInterface interface {
 	GetAllUsers(c *gin.Context)
 
 	UserApprove(c *gin.Context)
-
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -136,7 +135,6 @@ func (h RequestHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-
 func (h *RequestHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.ctrl.getAllUsers()
 	if err != nil {
@@ -145,6 +143,7 @@ func (h *RequestHandler) GetAllUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": users})
+}
 
 func (h RequestHandler) UserApprove(c *gin.Context) {
 	id := c.Param("id")

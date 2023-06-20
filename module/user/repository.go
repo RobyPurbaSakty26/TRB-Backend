@@ -83,12 +83,12 @@ func (r repository) updateInputFalse(user *entity.User, count int) error {
 	return r.db.Model(user).Where(" email = ? ", user.Email).Update("input_false", count).Error
 }
 
-
 func (r *repository) getAllUsers() ([]*entity.User, error) {
 	var users []*entity.User
 	err := r.db.Find(&users).Error
 	helpers.PanicIfError(err)
 	return users, nil
+}
 
 func (r repository) updateStatusIsActive(user *entity.User, isActive bool) error {
 	return r.db.Model(user).Where("email = ?", user.Email).Update("active", isActive).Error
