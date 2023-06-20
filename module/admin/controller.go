@@ -1,6 +1,10 @@
 package admin
 
-import "trb-backend/module/web"
+import (
+	"strconv"
+	"trb-backend/module/entity"
+	"trb-backend/module/web"
+)
 
 /**
  * Created by Goland & VS Code.
@@ -18,6 +22,8 @@ type controller struct {
 
 type ControllerAdminInterface interface {
 	getAllUser() (*web.AllUserResponse, error)
+	getRoleUser(id string) (*web.RoleUserResponse, error)
+	updateAccessUser(req *web.UpdateAccessRequest, id string) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -31,7 +37,9 @@ func (c controller) getAllUser() (*web.AllUserResponse, error) {
 	if err != nil {
 		return nil, err
 	}
-	result := &web.AllUserResponse{}
+	result := &web.AllUserResponse{
+		Status: "Success",
+	}
 
 	for _, user := range users {
 		item := web.ItemResponse{
@@ -45,4 +53,50 @@ func (c controller) getAllUser() (*web.AllUserResponse, error) {
 		result.Data = append(result.Data, item)
 	}
 	return result, nil
+}
+
+func (c controller) getRoleUser(id string) (*web.RoleUserResponse, error) {
+	data, err := c.useCase.getUserWithRole(id)
+	if err != nil {
+		return nil, err
+	}
+
+	result := &web.RoleUserResponse{
+		Status: "Success",
+		Data: web.ItemRoleResponse{
+			Fullname: data.Fullname,
+			Role:     data.Role.Name,
+		},
+	}
+	accesses, err := c.useCase.getAllAccessByRoleId(id)
+	if err != nil {
+		return nil, err
+	}
+	for _, access := range accesses {
+		item := web.ItemAccess{
+			Resource: access.Resource,
+			CanRead:  access.CanRead,
+			CanWrite: access.CanWrite,
+		}
+		result.Data.Access = append(result.Data.Access, item)
+	}
+
+	return result, nil
+}
+
+func (c controller) updateAccessUser(req *web.UpdateAccessRequest, id string) error {
+	idUint64, _ := strconv.ParseUint(id, 10, 64)
+	idUint := uint(idUint64)
+	for _, access := range req.Data {
+		accessReq := &entity.Access{
+			Resource: access.Resource,
+			CanRead:  access.CanRead,
+			CanWrite: access.CanWrite,
+		}
+		err := c.useCase.updateAccess(accessReq, &access, idUint)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

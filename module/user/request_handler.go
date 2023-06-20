@@ -1,7 +1,9 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"trb-backend/module/web"
 
 	"github.com/gin-gonic/gin"
@@ -28,7 +30,11 @@ type RequestHandlerInterface interface {
 	GetByUsername(c *gin.Context)
 	Login(c *gin.Context)
 	UpdatePassword(c *gin.Context)
+
 	GetAllUsers(c *gin.Context)
+
+	UserApprove(c *gin.Context)
+
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -130,6 +136,7 @@ func (h RequestHandler) UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+
 func (h *RequestHandler) GetAllUsers(c *gin.Context) {
 	users, err := h.ctrl.getAllUsers()
 	if err != nil {
@@ -138,4 +145,25 @@ func (h *RequestHandler) GetAllUsers(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"status": "success", "data": users})
+
+func (h RequestHandler) UserApprove(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+
+	// Convert string to int
+	num, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Printf("Error converting '%s' to int: %s\n", id, err.Error())
+		return
+	}
+
+	fmt.Println(num)
+
+	res, err := h.ctrl.UserApprove(num)
+
+	c.JSON(http.StatusOK, res)
+
 }

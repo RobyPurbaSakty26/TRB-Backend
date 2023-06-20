@@ -2,13 +2,14 @@ package user
 
 import (
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"regexp"
 	"strconv"
+	"time"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
-	"trb-backend/module/middleware"
 	"trb-backend/module/web"
 
 	"github.com/joho/godotenv"
@@ -35,6 +36,7 @@ type ControllerUserInterface interface {
 	login(req *web.LoginRequest) (*web.LoginResponse, error)
 	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
 	getAllUsers() (*web.AllUserResponse, error)
+	UserApprove(id int) (*web.UserApproveResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -154,6 +156,16 @@ func (c controller) getByUsername(username string) (*web.UserResponse, error) {
 	return res, nil
 }
 
+func isThreeHours(update time.Time) float64 {
+	lastUpdate := update
+	current := time.Now()
+	gap := current.Sub(lastUpdate)
+	hour := gap.Hours()
+
+	return hour
+
+}
+
 func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	err := godotenv.Load()
 	if err != nil {
@@ -161,15 +173,11 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	}
 
 	data, err := c.useCase.getByUsername(req.Username)
-
 	if err != nil {
 		return nil, err
 	}
 
-	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
-	if err != nil {
-		return nil, errors.New("Wrong password")
-	}
+	hour := isThreeHours(data.UpdatedAt)
 
 	// melihat selisih waktu
 	// lastUpdate := data.UpdatedAt
@@ -177,13 +185,43 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	// gap := current.Sub(lastUpdate)
 	// hour := gap.Hours()
 
-	// if hour > 2 {
-	// 	c.useCase.
-	// }
+	user := &entity.User{
+		Email:      data.Email,
+		InputFalse: data.InputFalse,
+	}
+
+	if hour > 3 {
+		err := c.useCase.updateInputFalse(user, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	if data.InputFalse >= 3 {
+		err = c.useCase.updateIsActive(user, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	data, _ = c.useCase.getByUsername(req.Username)
+
+	if data.Active != true {
+		return nil, errors.New("The account is not yet activated")
+	}
+
+	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
+	if err != nil {
+		err := c.useCase.updateInputFalse(user, data.InputFalse+1)
+		if err != nil {
+			return nil, err
+		}
+		return nil, errors.New("Wrong password")
+	}
 
 	secret := os.Getenv("SECRET_KEY")
 
-	token, err := middleware.GenerateToken(strconv.FormatUint(uint64(data.ID), 10), data.Username, strconv.FormatUint(uint64(data.RoleId), 10), secret)
+	token, err := helpers.GenerateToken(strconv.FormatUint(uint64(data.ID), 10), data.Username, strconv.FormatUint(uint64(data.RoleId), 10), secret)
 	if err != nil {
 		return nil, err
 	}
@@ -194,6 +232,11 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 			Token:    token,
 			IsActive: data.Active,
 		},
+	}
+
+	err = c.useCase.updateInputFalse(user, 0)
+	if err != nil {
+		return nil, err
 	}
 
 	return res, nil
@@ -225,7 +268,35 @@ func (c controller) updatePassword(req *web.UpdatePasswordRequest) (*web.UpdateP
 		Message: "Password changed successfully",
 	}
 	return res, nil
+}
 
+func (c controller) UserApprove(id int) (*web.UserApproveResponse, error) {
+
+	data, err := c.useCase.getById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println("data : ", data.ID)
+
+	// req := &entity.User{
+	// 	Username: data.Username,
+	// }
+	err = c.useCase.userApprove(data)
+
+	data, _ = c.useCase.getById(id)
+
+	res := &web.UserApproveResponse{
+		Status: "Success",
+		Data: web.UserApproveItems{
+			ID:       data.ID,
+			Fullname: data.Fullname,
+			Username: data.Username,
+			Email:    data.Email,
+			IsActive: data.Active,
+		},
+	}
+	return res, nil
 }
 
 func (c controller) getAllUsers() (*web.AllUserResponse, error) {

@@ -1,6 +1,9 @@
 package admin
 
-import "trb-backend/module/entity"
+import (
+	"trb-backend/module/entity"
+	"trb-backend/module/web"
+)
 
 /**
  * Created by Goland & VS Code.
@@ -18,8 +21,9 @@ type useCase struct {
 
 type UseCaseAdminInterface interface {
 	getAllUser() ([]entity.User, error)
-	getAccessByRoleId(id uint) (*entity.Access, error)
-	updateAccess(access *entity.Access) error
+	updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error
+	getAllAccessByRoleId(id string) ([]entity.Access, error)
+	getUserWithRole(id string) (*entity.User, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -32,10 +36,14 @@ func (u useCase) getAllUser() ([]entity.User, error) {
 	return u.repo.getAllUser()
 }
 
-func (u useCase) getAccessByRoleId(id uint) (*entity.Access, error) {
-	return u.repo.getAccessByRoleId(id)
+func (u useCase) updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error {
+	return u.repo.updateAccess(access, req, id)
 }
 
-func (u useCase) updateAccess(access *entity.Access) error {
-	return u.repo.updateAccess(access)
+func (u useCase) getUserWithRole(id string) (*entity.User, error) {
+	return u.repo.getUserWithRole(id)
+}
+
+func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
+	return u.repo.getAllAccessByRoleId(id)
 }

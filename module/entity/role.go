@@ -1,6 +1,8 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 /**
  * Created by Goland & VS Code.
@@ -14,5 +16,6 @@ import "gorm.io/gorm"
 
 type Role struct {
 	gorm.Model
-	Name string `json:"name"`
+	Name     string   `json:"name"`
+	Accesses []Access `json:"accesses"`
 }
