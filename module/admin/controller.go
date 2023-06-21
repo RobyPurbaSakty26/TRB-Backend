@@ -3,7 +3,8 @@ package admin
 import (
 	"strconv"
 	"trb-backend/module/entity"
-	"trb-backend/module/web"
+	"trb-backend/module/web/request"
+	"trb-backend/module/web/response"
 )
 
 /**
@@ -21,9 +22,9 @@ type controller struct {
 }
 
 type ControllerAdminInterface interface {
-	getAllUser() (*web.AllUserResponse, error)
-	getRoleUser(id string) (*web.RoleUserResponse, error)
-	updateAccessUser(req *web.UpdateAccessRequest, id string) error
+	getAllUser() (*response.AllUserResponse, error)
+	getRoleUser(id string) (*response.RoleUserResponse, error)
+	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -32,17 +33,17 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 
-func (c controller) getAllUser() (*web.AllUserResponse, error) {
+func (c controller) getAllUser() (*response.AllUserResponse, error) {
 	users, err := c.useCase.getAllUser()
 	if err != nil {
 		return nil, err
 	}
-	result := &web.AllUserResponse{
+	result := &response.AllUserResponse{
 		Status: "Success",
 	}
 
 	for _, user := range users {
-		item := web.ItemResponse{
+		item := response.ItemResponse{
 			ID:       user.ID,
 			Username: user.Username,
 			Fullname: user.Fullname,
@@ -55,15 +56,15 @@ func (c controller) getAllUser() (*web.AllUserResponse, error) {
 	return result, nil
 }
 
-func (c controller) getRoleUser(id string) (*web.RoleUserResponse, error) {
+func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 	data, err := c.useCase.getUserWithRole(id)
 	if err != nil {
 		return nil, err
 	}
 
-	result := &web.RoleUserResponse{
+	result := &response.RoleUserResponse{
 		Status: "Success",
-		Data: web.ItemRoleResponse{
+		Data: response.ItemRoleResponse{
 			Fullname: data.Fullname,
 			Role:     data.Role.Name,
 		},
@@ -73,7 +74,7 @@ func (c controller) getRoleUser(id string) (*web.RoleUserResponse, error) {
 		return nil, err
 	}
 	for _, access := range accesses {
-		item := web.ItemAccess{
+		item := response.ItemAccess{
 			Resource: access.Resource,
 			CanRead:  access.CanRead,
 			CanWrite: access.CanWrite,
@@ -84,16 +85,23 @@ func (c controller) getRoleUser(id string) (*web.RoleUserResponse, error) {
 	return result, nil
 }
 
-func (c controller) updateAccessUser(req *web.UpdateAccessRequest, id string) error {
+func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string) error {
 	idUint64, _ := strconv.ParseUint(id, 10, 64)
 	idUint := uint(idUint64)
+	role := &entity.Role{
+		Name: req.Role,
+	}
+	err := c.useCase.updateRole(role, idUint)
+	if err != nil {
+		return err
+	}
 	for _, access := range req.Data {
 		accessReq := &entity.Access{
 			Resource: access.Resource,
 			CanRead:  access.CanRead,
 			CanWrite: access.CanWrite,
 		}
-		err := c.useCase.updateAccess(accessReq, &access, idUint)
+		err := c.useCase.updateAccess(accessReq, idUint)
 		if err != nil {
 			return err
 		}

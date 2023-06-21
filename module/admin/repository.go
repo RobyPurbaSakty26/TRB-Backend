@@ -3,7 +3,6 @@ package admin
 import (
 	"gorm.io/gorm"
 	"trb-backend/module/entity"
-	"trb-backend/module/web"
 )
 
 /**
@@ -24,7 +23,8 @@ type AdminRepositoryInterface interface {
 	getAllUser() ([]entity.User, error)
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
-	updateAccess(access *entity.Access, request *web.AccessRequest, id uint) error
+	updateAccess(request *entity.Access, id uint) error
+	updateRole(role *entity.Role, id uint) error
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
@@ -55,8 +55,16 @@ func (r repository) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	}
 	return access, nil
 }
-func (r repository) updateAccess(access *entity.Access, request *web.AccessRequest, id uint) error {
-	return r.db.Model(&access).
+func (r repository) updateRole(role *entity.Role, id uint) error {
+	return r.db.Model(role).
+		Where("id = ?", id).
+		Update("name", role.Name).Error
+}
+func (r repository) updateAccess(request *entity.Access, id uint) error {
+	return r.db.Model(&request).
 		Where(entity.Access{Resource: request.Resource, RoleId: id}).
-		Updates(entity.Access{CanRead: request.CanRead, CanWrite: request.CanWrite}).Error
+		Updates(map[string]interface{}{
+			"can_read":  request.CanRead,
+			"can_write": request.CanWrite,
+		}).Error
 }

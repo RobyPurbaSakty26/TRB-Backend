@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 	"trb-backend/helpers"
-	"trb-backend/module/web"
+	"trb-backend/module/web/response"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +21,6 @@ import (
 
 // generate token
 
-
 func AuthMiddleware(c *gin.Context) {
 	// get token from authorization
 	authHeader := c.GetHeader("Authorization")
@@ -30,7 +29,7 @@ func AuthMiddleware(c *gin.Context) {
 	// verify token
 	token, err := helpers.VerifyJWT(tokenString, "secret-key")
 	if err != nil {
-		c.JSON(http.StatusNonAuthoritativeInfo, web.ErrorResponse{Status: "Fail", Message: err.Error()})
+		c.JSON(http.StatusNonAuthoritativeInfo, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 		c.Abort()
 		return
 	}

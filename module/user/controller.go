@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"regexp"
 	"strconv"
 	"time"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
 	"trb-backend/module/web"
+	"trb-backend/module/web/request"
+	"trb-backend/module/web/response"
 
 	"github.com/joho/godotenv"
 )
@@ -30,13 +31,13 @@ type controller struct {
 }
 
 type ControllerUserInterface interface {
-	create(req *web.UserCreateRequest) (*web.UserResponse, error)
-	getByEmail(email string) (*web.UserResponse, error)
-	getByUsername(username string) (*web.UserResponse, error)
-	login(req *web.LoginRequest) (*web.LoginResponse, error)
-	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
-	getAllUsers() (*web.AllUserResponse, error)
-	UserApprove(id int) (*web.UserApproveResponse, error)
+	create(req *request.UserCreateRequest) (*response.UserResponse, error)
+	getByEmail(email string) (*response.UserResponse, error)
+	getByUsername(username string) (*response.UserResponse, error)
+	login(req *request.LoginRequest) (*response.LoginResponse, error)
+	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
+	getAllUsers() (*response.AllUserResponse, error)
+	UserApprove(id int) (*response.UserApproveResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -44,30 +45,9 @@ func NewController(usecase UseCaseInterface) ControllerUserInterface {
 		useCase: usecase,
 	}
 }
-func validatePass(p string) bool {
-	if len(p) < 8 {
-		return false
-	}
-	match, _ := regexp.MatchString("[A-Z]", p)
-	if !match {
-		return false
-	}
 
-	match, _ = regexp.MatchString("[!@#$%^&*()_+{}|:\"<>?]", p)
-	if !match {
-		return false
-	}
-
-	match, _ = regexp.MatchString("[0-9]", p)
-	if !match {
-		return false
-	}
-
-	return true
-}
-
-func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error) {
-	pass := validatePass(req.Password)
+func (c controller) create(req *request.UserCreateRequest) (*response.UserResponse, error) {
+	pass := helpers.ValidatePass(req.Password)
 	if !pass {
 		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
 	}
@@ -84,19 +64,32 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 
 	hashPass, _ := helpers.HashPass(req.Password)
 
-	// role := entity.Role{
-	// 	Name: "user",
-	// }
-	// err = c.useCase.createRoleUser(&role)
-	// if err != nil {
-	// 	return nil, err
-	// }
+	role := entity.Role{}
+	err = c.useCase.createRoleUser(&role)
+	if err != nil {
+		return nil, err
+	}
+
+	access := entity.Access{
+		RoleId:   role.ID,
+		Resource: "transaction",
+	}
+	if err = c.useCase.createAccess(&access); err != nil {
+		return nil, err
+	}
+	access = entity.Access{
+		RoleId:   role.ID,
+		Resource: "virtual_account",
+	}
+	if err = c.useCase.createAccess(&access); err != nil {
+		return nil, err
+	}
 	user := entity.User{
 		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashPass,
-		// RoleId:   role.ID,
+		RoleId:   role.ID,
 	}
 	err = c.useCase.create(&user)
 	if err != nil {
@@ -104,9 +97,9 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 	}
 
 	data, _ := c.useCase.getUserAndRole(user.ID)
-	result := &web.UserResponse{
+	result := &response.UserResponse{
 		Status: "Success",
-		Data: web.ItemResponse{
+		Data: response.ItemResponse{
 			ID:       data.ID,
 			Username: data.Username,
 			Fullname: data.Fullname,
@@ -118,16 +111,16 @@ func (c controller) create(req *web.UserCreateRequest) (*web.UserResponse, error
 	return result, nil
 }
 
-func (c controller) getByEmail(email string) (*web.UserResponse, error) {
+func (c controller) getByEmail(email string) (*response.UserResponse, error) {
 	data, err := c.useCase.getByEmail(email)
 
 	if err != nil {
 		return nil, err
 	}
 
-	res := &web.UserResponse{
+	res := &response.UserResponse{
 		Status: "Success",
-		Data: web.ItemResponse{
+		Data: response.ItemResponse{
 			ID:       data.ID,
 			Username: data.Username,
 			Fullname: data.Fullname,
@@ -137,16 +130,16 @@ func (c controller) getByEmail(email string) (*web.UserResponse, error) {
 	return res, nil
 }
 
-func (c controller) getByUsername(username string) (*web.UserResponse, error) {
+func (c controller) getByUsername(username string) (*response.UserResponse, error) {
 	data, err := c.useCase.getByUsername(username)
 
 	if err != nil {
 		return nil, err
 	}
 
-	res := &web.UserResponse{
+	res := &response.UserResponse{
 		Status: "Success",
-		Data: web.ItemResponse{
+		Data: response.ItemResponse{
 			ID:       data.ID,
 			Fullname: data.Fullname,
 			Username: data.Username,
@@ -166,7 +159,7 @@ func isThreeHours(update time.Time) float64 {
 
 }
 
-func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
+func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, error) {
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal("Error loading .env file")
@@ -226,9 +219,9 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 		return nil, err
 	}
 
-	res := &web.LoginResponse{
+	res := &response.LoginResponse{
 		Status: "Success",
-		Data: web.LoginItemsResponse{
+		Data: response.LoginItemsResponse{
 			Token:    token,
 			IsActive: data.Active,
 		},
@@ -242,7 +235,7 @@ func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	return res, nil
 }
 
-func (c controller) updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error) {
+func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error) {
 	data, err := c.useCase.getByEmail(req.Email)
 	if err != nil {
 		return nil, err
@@ -263,14 +256,14 @@ func (c controller) updatePassword(req *web.UpdatePasswordRequest) (*web.UpdateP
 		return nil, err
 	}
 
-	res := &web.UpdatePasswordResponse{
+	res := &response.UpdatePasswordResponse{
 		Status:  "Success",
 		Message: "Password changed successfully",
 	}
 	return res, nil
 }
 
-func (c controller) UserApprove(id int) (*web.UserApproveResponse, error) {
+func (c controller) UserApprove(id int) (*response.UserApproveResponse, error) {
 
 	data, err := c.useCase.getById(id)
 	if err != nil {
@@ -286,7 +279,7 @@ func (c controller) UserApprove(id int) (*web.UserApproveResponse, error) {
 
 	data, _ = c.useCase.getById(id)
 
-	res := &web.UserApproveResponse{
+	res := &response.UserApproveResponse{
 		Status: "Success",
 		Data: web.UserApproveItems{
 			ID:       data.ID,
@@ -299,15 +292,15 @@ func (c controller) UserApprove(id int) (*web.UserApproveResponse, error) {
 	return res, nil
 }
 
-func (c controller) getAllUsers() (*web.AllUserResponse, error) {
+func (c controller) getAllUsers() (*response.AllUserResponse, error) {
 	users, err := c.useCase.getAllUsers()
 	if err != nil {
 		return nil, err
 	}
 
-	var userResponses []web.ItemResponse
+	var userResponses []response.ItemResponse
 	for _, user := range users {
-		userResponses = append(userResponses, web.ItemResponse{
+		userResponses = append(userResponses, response.ItemResponse{
 			ID:       user.ID,
 			Fullname: user.Fullname,
 			Username: user.Username,
@@ -316,7 +309,7 @@ func (c controller) getAllUsers() (*web.AllUserResponse, error) {
 		})
 	}
 
-	response := &web.AllUserResponse{
+	response := &response.AllUserResponse{
 		Status: "Success",
 		Data:   userResponses,
 	}

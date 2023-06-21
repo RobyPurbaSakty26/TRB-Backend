@@ -33,6 +33,7 @@ type UserRepositoryInterface interface {
 	updateStatusIsActive(user *entity.User, isActive bool) error
 	userApprove(user *entity.User) error
 	getById(id int) (*entity.User, error)
+	createAccess(access *entity.Access) error
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
@@ -108,4 +109,8 @@ func (r repository) getById(id int) (*entity.User, error) {
 
 	return &user, err
 
+}
+
+func (r repository) createAccess(access *entity.Access) error {
+	return r.db.Create(access).Error
 }

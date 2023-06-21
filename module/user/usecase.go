@@ -30,6 +30,7 @@ type UseCaseInterface interface {
 	updateIsActive(user *entity.User, isActive bool) error
 	userApprove(user *entity.User) error
 	getById(id int) (*entity.User, error)
+	createAccess(access *entity.Access) error
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -77,5 +78,8 @@ func (u UseCase) userApprove(user *entity.User) error {
 
 func (u UseCase) getById(id int) (*entity.User, error) {
 	return u.repo.getById(id)
+}
 
+func (u UseCase) createAccess(access *entity.Access) error {
+	return u.repo.createAccess(access)
 }

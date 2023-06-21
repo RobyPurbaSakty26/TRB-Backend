@@ -2,7 +2,6 @@ package admin
 
 import (
 	"trb-backend/module/entity"
-	"trb-backend/module/web"
 )
 
 /**
@@ -21,9 +20,10 @@ type useCase struct {
 
 type UseCaseAdminInterface interface {
 	getAllUser() ([]entity.User, error)
-	updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error
+	updateAccess(req *entity.Access, id uint) error
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
+	updateRole(role *entity.Role, id uint) error
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -36,8 +36,8 @@ func (u useCase) getAllUser() ([]entity.User, error) {
 	return u.repo.getAllUser()
 }
 
-func (u useCase) updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error {
-	return u.repo.updateAccess(access, req, id)
+func (u useCase) updateAccess(req *entity.Access, id uint) error {
+	return u.repo.updateAccess(req, id)
 }
 
 func (u useCase) getUserWithRole(id string) (*entity.User, error) {
@@ -46,4 +46,8 @@ func (u useCase) getUserWithRole(id string) (*entity.User, error) {
 
 func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	return u.repo.getAllAccessByRoleId(id)
+}
+
+func (u useCase) updateRole(role *entity.Role, id uint) error {
+	return u.repo.updateRole(role, id)
 }

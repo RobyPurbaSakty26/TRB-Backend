@@ -1,4 +1,4 @@
-package web
+package response
 
 type RoleUserResponse struct {
 	Status string           `json:"status"`

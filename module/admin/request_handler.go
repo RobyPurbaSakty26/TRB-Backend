@@ -4,7 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
-	"trb-backend/module/web"
+	"trb-backend/module/web/request"
+	"trb-backend/module/web/response"
 )
 
 /**
@@ -44,7 +45,7 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 func (h requestAdminHandler) GetAllUser(c *gin.Context) {
 	result, err := h.ctrl.getAllUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -55,7 +56,7 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 
 	result, err := h.ctrl.getRoleUser(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusNotFound, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
@@ -64,23 +65,23 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 
 func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 	id := c.Param("id")
-	var req web.UpdateAccessRequest
+	var req request.UpdateAccessRequest
 	err := c.BindJSON(&req)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
 	err = h.ctrl.updateAccessUser(&req, id)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 	result, err := h.ctrl.getRoleUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
