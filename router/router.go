@@ -3,6 +3,7 @@ package router
 import (
 	"log"
 	"trb-backend/config"
+	"trb-backend/module/middleware"
 	"trb-backend/module/user"
 
 	"github.com/gin-contrib/cors"
@@ -29,7 +30,7 @@ func SetupRouter() *gin.Engine {
 
 	r.Use(cors.New(cors.Config{
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE"},
-		AllowHeaders:     []string{"Authorization"},
+		AllowHeaders:     []string{"Authorization", "Content-Type"},
 		AllowOrigins:     []string{"*"},
 		AllowCredentials: true,
 	}))
@@ -37,13 +38,14 @@ func SetupRouter() *gin.Engine {
 	userHandler := user.DefaultRequestHandler(db)
 
 	AdminRoutes(r, db)
-	r.GET("/user", userHandler.GetAllUsers)
 	r.POST("/register", userHandler.Create)
-	r.GET("/user/email", userHandler.GetByEmail)
-	r.GET("/user/username", userHandler.GetByUsername)
 	r.POST("/login", userHandler.Login)
 	r.PATCH("/user/forgot-password", userHandler.UpdatePassword)
-	r.PATCH("/user/approve/:id", userHandler.UserApprove)
+	// auth
+	r.GET("/user", middleware.AuthMiddleware, userHandler.GetAllUsers)
+	r.GET("/user/email", middleware.AuthMiddleware, userHandler.GetByEmail)
+	r.GET("/user/username", middleware.AuthMiddleware, userHandler.GetByUsername)
+	r.PATCH("/user/approve/:id", middleware.AuthMiddleware, userHandler.UserApprove)
 
 	return r
 }

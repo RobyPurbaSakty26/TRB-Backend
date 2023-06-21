@@ -3,7 +3,6 @@ package user
 import (
 	"errors"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 	"strconv"
@@ -169,7 +168,7 @@ func isThreeHours(update time.Time) float64 {
 func (c controller) login(req *web.LoginRequest) (*web.LoginResponse, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		fmt.Println("Error loading .env file")
 	}
 
 	data, err := c.useCase.getByUsername(req.Username)
