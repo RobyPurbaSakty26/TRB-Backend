@@ -1,9 +1,10 @@
 package router
 
 import (
+	"trb-backend/module/admin"
+
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
-	"trb-backend/module/admin"
 )
 
 func AdminRoutes(r *gin.Engine, db *gorm.DB) {
