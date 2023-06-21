@@ -34,6 +34,7 @@ type RequestHandlerInterface interface {
 	GetAllUsers(c *gin.Context)
 
 	UserApprove(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -165,4 +166,27 @@ func (h RequestHandler) UserApprove(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 
+}
+
+func (h RequestHandler) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+
+	// Convert string to int
+	userID, err := strconv.Atoi(id)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Fail", Message: "Invalid ID format"})
+		return
+	}
+
+	err = h.ctrl.deleteUser(userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User deleted"})
 }

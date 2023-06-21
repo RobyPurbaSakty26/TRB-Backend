@@ -33,6 +33,7 @@ type UserRepositoryInterface interface {
 	updateStatusIsActive(user *entity.User, isActive bool) error
 	userApprove(user *entity.User) error
 	getById(id int) (*entity.User, error)
+	deleteUser(id uint) error
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
@@ -108,4 +109,17 @@ func (r repository) getById(id int) (*entity.User, error) {
 
 	return &user, err
 
+}
+
+func (r *repository) deleteUser(id uint) error {
+	var user entity.User
+	if err := r.db.First(&user, id).Error; err != nil {
+		return err
+	}
+
+	if err := r.db.Delete(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
 }

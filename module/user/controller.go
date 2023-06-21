@@ -37,6 +37,7 @@ type ControllerUserInterface interface {
 	updatePassword(req *web.UpdatePasswordRequest) (*web.UpdatePasswordResponse, error)
 	getAllUsers() (*web.AllUserResponse, error)
 	UserApprove(id int) (*web.UserApproveResponse, error)
+	deleteUser(id int) error
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -322,4 +323,20 @@ func (c controller) getAllUsers() (*web.AllUserResponse, error) {
 	}
 
 	return response, nil
+}
+
+func (c controller) deleteUser(id int) error {
+	// Cek apakah pengguna dengan ID tersebut ada dalam sistem
+	user, err := c.useCase.getById(id)
+	if err != nil {
+		return err
+	}
+
+	// Hapus pengguna dari use case
+	err = c.useCase.deleteUser(user.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
