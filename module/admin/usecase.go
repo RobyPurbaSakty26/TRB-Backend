@@ -25,7 +25,8 @@ type UseCaseAdminInterface interface {
 	getUserWithRole(id string) (*entity.User, error)
 	updateRole(role *entity.Role, id uint) error
 	userApprove(user *entity.User) error
-	getById(id int) (*entity.User, error)
+	getById(id uint) (*entity.User, error)
+	deleteUser(id uint) error
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -57,6 +58,22 @@ func (u useCase) userApprove(user *entity.User) error {
 	return u.repo.userApprove(user)
 }
 
-func (u useCase) getById(id int) (*entity.User, error) {
+func (u useCase) getById(id uint) (*entity.User, error) {
 	return u.repo.getById(id)
+}
+
+func (u useCase) deleteUser(id uint) error {
+	// Periksa apakah pengguna dengan ID tersebut ada dalam sistem
+	_, err := u.repo.getById(id)
+	if err != nil {
+		return err
+	}
+
+	// Melakukan penghapusan pengguna dari repository
+	err = u.repo.deleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

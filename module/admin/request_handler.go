@@ -29,6 +29,7 @@ type RequestHandlerAdminInterface interface {
 	GetAccessUser(c *gin.Context)
 	UpdateAccessUser(c *gin.Context)
 	UserApprove(c *gin.Context)
+	DeleteUser(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -98,12 +99,34 @@ func (h requestAdminHandler) UserApprove(c *gin.Context) {
 		return
 	}
 
-	num, err := strconv.Atoi(id)
+	num, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		fmt.Printf("Error converting '%s' to int: %s\n", id, err.Error())
 		return
 	}
-	res, err := h.ctrl.UserApprove(num)
+	idUint := uint(num)
+	res, err := h.ctrl.UserApprove(idUint)
 
 	c.JSON(http.StatusOK, res)
+}
+func (h requestAdminHandler) DeleteUser(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+
+	userID, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: "Invalid ID format"})
+		return
+	}
+	idUint := uint(userID)
+	err = h.ctrl.deleteUser(idUint)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "User deleted"})
 }

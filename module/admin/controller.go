@@ -26,7 +26,8 @@ type ControllerAdminInterface interface {
 	getAllUser() (*response.AllUserResponse, error)
 	getRoleUser(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
-	UserApprove(id int) (*response.UserApproveResponse, error)
+	UserApprove(id uint) (*response.UserApproveResponse, error)
+	deleteUser(id uint) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -114,7 +115,7 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 	return nil
 }
 
-func (c controller) UserApprove(id int) (*response.UserApproveResponse, error) {
+func (c controller) UserApprove(id uint) (*response.UserApproveResponse, error) {
 
 	data, err := c.useCase.getById(id)
 	if err != nil {
@@ -136,4 +137,20 @@ func (c controller) UserApprove(id int) (*response.UserApproveResponse, error) {
 		},
 	}
 	return res, nil
+}
+
+func (c controller) deleteUser(id uint) error {
+	// Cek apakah pengguna dengan ID tersebut ada dalam sistem
+	user, err := c.useCase.getById(id)
+	if err != nil {
+		return err
+	}
+
+	// Hapus pengguna dari use case
+	err = c.useCase.deleteUser(user.ID)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
