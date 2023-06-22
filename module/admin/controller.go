@@ -73,6 +73,7 @@ func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 			Role:     data.Role.Name,
 		},
 	}
+
 	accesses, err := c.useCase.getAllAccessByRoleId(id)
 	if err != nil {
 		return nil, err
@@ -92,7 +93,7 @@ func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string) error {
 	idUint64, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return errors.New("cannot parse id string to uint")
+		return errors.New("cannot parse id string to uint64")
 	}
 	idUint := uint(idUint64)
 	role := &entity.Role{
