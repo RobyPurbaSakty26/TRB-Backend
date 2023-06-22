@@ -8,7 +8,6 @@ import (
 	"time"
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
-	"trb-backend/module/web"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 
@@ -35,8 +34,6 @@ type ControllerUserInterface interface {
 	getByUsername(username string) (*response.UserResponse, error)
 	login(req *request.LoginRequest) (*response.LoginResponse, error)
 	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
-	getAllUsers() (*response.AllUserResponse, error)
-	UserApprove(id int) (*response.UserApproveResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -170,13 +167,6 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 	}
 
 	hour := isThreeHours(data.UpdatedAt)
-
-	// melihat selisih waktu
-	// lastUpdate := data.UpdatedAt
-	// current := time.Now()
-	// gap := current.Sub(lastUpdate)
-	// hour := gap.Hours()
-
 	user := &entity.User{
 		Email:      data.Email,
 		InputFalse: data.InputFalse,
@@ -260,58 +250,4 @@ func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*respons
 		Message: "Password changed successfully",
 	}
 	return res, nil
-}
-
-func (c controller) UserApprove(id int) (*response.UserApproveResponse, error) {
-
-	data, err := c.useCase.getById(id)
-	if err != nil {
-		return nil, err
-	}
-
-	fmt.Println("data : ", data.ID)
-
-	// req := &entity.User{
-	// 	Username: data.Username,
-	// }
-	err = c.useCase.userApprove(data)
-
-	data, _ = c.useCase.getById(id)
-
-	res := &response.UserApproveResponse{
-		Status: "Success",
-		Data: web.UserApproveItems{
-			ID:       data.ID,
-			Fullname: data.Fullname,
-			Username: data.Username,
-			Email:    data.Email,
-			IsActive: data.Active,
-		},
-	}
-	return res, nil
-}
-
-func (c controller) getAllUsers() (*response.AllUserResponse, error) {
-	users, err := c.useCase.getAllUsers()
-	if err != nil {
-		return nil, err
-	}
-
-	var userResponses []response.ItemResponse
-	for _, user := range users {
-		userResponses = append(userResponses, response.ItemResponse{
-			ID:       user.ID,
-			Fullname: user.Fullname,
-			Username: user.Username,
-			Email:    user.Email,
-			IsActive: user.Active,
-		})
-	}
-
-	response := &response.AllUserResponse{
-		Status: "Success",
-		Data:   userResponses,
-	}
-
-	return response, nil
 }

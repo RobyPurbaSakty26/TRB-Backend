@@ -24,6 +24,8 @@ type UseCaseAdminInterface interface {
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
 	updateRole(role *entity.Role, id uint) error
+	userApprove(user *entity.User) error
+	getById(id int) (*entity.User, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -50,4 +52,11 @@ func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 
 func (u useCase) updateRole(role *entity.Role, id uint) error {
 	return u.repo.updateRole(role, id)
+}
+func (u useCase) userApprove(user *entity.User) error {
+	return u.repo.userApprove(user)
+}
+
+func (u useCase) getById(id int) (*entity.User, error) {
+	return u.repo.getById(id)
 }

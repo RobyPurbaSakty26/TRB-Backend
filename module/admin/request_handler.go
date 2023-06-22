@@ -1,9 +1,11 @@
 package admin
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
+	"strconv"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 )
@@ -23,9 +25,10 @@ type requestAdminHandler struct {
 }
 
 type RequestHandlerAdminInterface interface {
-	GetAllUser(c *gin.Context)
+	GetAllUsers(c *gin.Context)
 	GetAccessUser(c *gin.Context)
 	UpdateAccessUser(c *gin.Context)
+	UserApprove(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -42,7 +45,7 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
-func (h requestAdminHandler) GetAllUser(c *gin.Context) {
+func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
 	result, err := h.ctrl.getAllUser()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
@@ -86,4 +89,21 @@ func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func (h requestAdminHandler) UserApprove(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+
+	num, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Printf("Error converting '%s' to int: %s\n", id, err.Error())
+		return
+	}
+	res, err := h.ctrl.UserApprove(num)
+
+	c.JSON(http.StatusOK, res)
 }

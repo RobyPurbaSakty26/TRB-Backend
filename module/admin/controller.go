@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"strconv"
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
@@ -25,6 +26,7 @@ type ControllerAdminInterface interface {
 	getAllUser() (*response.AllUserResponse, error)
 	getRoleUser(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
+	UserApprove(id int) (*response.UserApproveResponse, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -86,12 +88,15 @@ func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 }
 
 func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string) error {
-	idUint64, _ := strconv.ParseUint(id, 10, 64)
+	idUint64, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return errors.New("cannot parse id string to uint")
+	}
 	idUint := uint(idUint64)
 	role := &entity.Role{
 		Name: req.Role,
 	}
-	err := c.useCase.updateRole(role, idUint)
+	err = c.useCase.updateRole(role, idUint)
 	if err != nil {
 		return err
 	}
@@ -107,4 +112,28 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 		}
 	}
 	return nil
+}
+
+func (c controller) UserApprove(id int) (*response.UserApproveResponse, error) {
+
+	data, err := c.useCase.getById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = c.useCase.userApprove(data)
+
+	data, _ = c.useCase.getById(id)
+
+	res := &response.UserApproveResponse{
+		Status: "Success",
+		Data: response.UserApproveItems{
+			ID:       data.ID,
+			Fullname: data.Fullname,
+			Username: data.Username,
+			Email:    data.Email,
+			IsActive: data.Active,
+		},
+	}
+	return res, nil
 }

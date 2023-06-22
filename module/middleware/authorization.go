@@ -23,11 +23,9 @@ import (
 // generate token
 
 func AuthMiddleware(c *gin.Context) {
-	// get token from authorization
 	authHeader := c.GetHeader("Authorization")
 	tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 
-	// verify token
 	secret := os.Getenv("SECRET_KEY")
 	token, err := helpers.VerifyJWT(tokenString, secret)
 	if err != nil {
@@ -44,8 +42,5 @@ func AuthMiddleware(c *gin.Context) {
 
 	c.Set("data", data)
 
-	// c.Set("id", token.ID)
-	// c.Set("username", token.username)
-	// c.Set("role", token.Role)
 	c.Next()
 }

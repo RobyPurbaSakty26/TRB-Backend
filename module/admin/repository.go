@@ -25,6 +25,8 @@ type AdminRepositoryInterface interface {
 	getUserWithRole(id string) (*entity.User, error)
 	updateAccess(request *entity.Access, id uint) error
 	updateRole(role *entity.Role, id uint) error
+	userApprove(user *entity.User) error
+	getById(id int) (*entity.User, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
@@ -67,4 +69,20 @@ func (r repository) updateAccess(request *entity.Access, id uint) error {
 			"can_read":  request.CanRead,
 			"can_write": request.CanWrite,
 		}).Error
+}
+
+func (r repository) userApprove(user *entity.User) error {
+
+	return r.db.Model(&user).Updates(map[string]interface{}{
+		"InputFalse": 0,
+		"Active":     true,
+	}).Error
+}
+
+func (r repository) getById(id int) (*entity.User, error) {
+	var user entity.User
+	err := r.db.First(&user, id).Error
+
+	return &user, err
+
 }
