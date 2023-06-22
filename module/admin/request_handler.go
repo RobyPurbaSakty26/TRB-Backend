@@ -90,6 +90,7 @@ func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, result)
+	//c.JSON(http.StatusOK, response.ErrorResponse{Status: "success", Message: "success"})
 }
 
 func (h requestAdminHandler) UserApprove(c *gin.Context) {
