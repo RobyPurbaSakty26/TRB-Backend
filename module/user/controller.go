@@ -29,13 +29,11 @@ type controller struct {
 }
 
 type ControllerUserInterface interface {
-
 	create(req *request.UserCreateRequest) (*response.UserResponse, error)
 	getByEmail(email string) (*response.UserResponse, error)
 	getByUsername(username string) (*response.UserResponse, error)
 	login(req *request.LoginRequest) (*response.LoginResponse, error)
 	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
-  deleteUser(id int) error
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
@@ -252,20 +250,4 @@ func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*respons
 		Message: "Password changed successfully",
 	}
 	return res, nil
-}
-
-func (c controller) deleteUser(id int) error {
-	// Cek apakah pengguna dengan ID tersebut ada dalam sistem
-	user, err := c.useCase.getById(id)
-	if err != nil {
-		return err
-	}
-
-	// Hapus pengguna dari use case
-	err = c.useCase.deleteUser(user.ID)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }

@@ -26,7 +26,8 @@ type AdminRepositoryInterface interface {
 	updateAccess(request *entity.Access, id uint) error
 	updateRole(role *entity.Role, id uint) error
 	userApprove(user *entity.User) error
-	getById(id int) (*entity.User, error)
+	getById(id uint) (*entity.User, error)
+	deleteUser(id uint) error
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
@@ -79,10 +80,23 @@ func (r repository) userApprove(user *entity.User) error {
 	}).Error
 }
 
-func (r repository) getById(id int) (*entity.User, error) {
+func (r repository) getById(id uint) (*entity.User, error) {
 	var user entity.User
 	err := r.db.First(&user, id).Error
 
 	return &user, err
 
+}
+
+func (r *repository) deleteUser(id uint) error {
+	var user entity.User
+	if err := r.db.First(&user, id).Error; err != nil {
+		return err
+	}
+
+	if err := r.db.Delete(&user).Error; err != nil {
+		return err
+	}
+
+	return nil
 }
