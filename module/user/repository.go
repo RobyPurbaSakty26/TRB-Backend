@@ -24,14 +24,11 @@ type UserRepositoryInterface interface {
 	save(user *entity.User) error
 	getByEmail(email string) (*entity.User, error)
 	getByUsername(username string) (*entity.User, error)
-	createRole(role *entity.Role) error
 	getUserAndRole(id uint) (*entity.User, error)
 	updatePassword(user *entity.User, password string) error
 	updateInputFalse(user *entity.User, count int) error
 	updateStatusIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
-
-	createAccess(access *entity.Access) error
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
@@ -58,10 +55,6 @@ func (r repository) getByUsername(username string) (*entity.User, error) {
 		return nil, err
 	}
 	return &user, nil
-}
-
-func (r repository) createRole(role *entity.Role) error {
-	return r.db.Create(role).Error
 }
 
 func (r repository) getUserAndRole(id uint) (*entity.User, error) {
@@ -91,8 +84,4 @@ func (r repository) getById(id int) (*entity.User, error) {
 
 	return &user, err
 
-}
-
-func (r repository) createAccess(access *entity.Access) error {
-	return r.db.Create(access).Error
 }
