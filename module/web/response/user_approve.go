@@ -1,4 +1,4 @@
-package web
+package response
 
 type UserApprove struct {
 	IsActive   bool

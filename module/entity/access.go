@@ -1,6 +1,8 @@
 package entity
 
-import "gorm.io/gorm"
+import (
+	"gorm.io/gorm"
+)
 
 /**
  * Created by Goland & VS Code.
@@ -16,7 +18,7 @@ type Access struct {
 	gorm.Model
 	RoleId   uint   `json:"role_id"`
 	Resource string `json:"resource"`
-	CanRead  bool   `json:"can_read"`
-	CanWrite bool   `json:"can_write"`
+	CanRead  bool   `json:"can_read" `
+	CanWrite bool   `json:"can_write" `
 	Role     Role
 }

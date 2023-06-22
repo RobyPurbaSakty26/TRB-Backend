@@ -26,10 +26,9 @@ type UseCaseInterface interface {
 	getUserAndRole(id uint) (*entity.User, error)
 	updatePassword(user *entity.User, password string) error
 	updateInputFalse(user *entity.User, count int) error
-  getAllUsers() ([]*entity.User, error)
-  updateIsActive(user *entity.User, isActive bool) error
-	userApprove(user *entity.User) error
+	updateIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
+	createAccess(access *entity.Access) error
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -63,19 +62,14 @@ func (u UseCase) updateInputFalse(user *entity.User, count int) error {
 	return u.repo.updateInputFalse(user, count)
 }
 
-
-func (u UseCase) getAllUser() ([]*entity.User, error) {
-	return u.repo.getAllUsers()
-
 func (u UseCase) updateIsActive(user *entity.User, isActive bool) error {
 	return u.repo.updateStatusIsActive(user, isActive)
 }
 
-func (u UseCase) userApprove(user *entity.User) error {
-	return u.repo.userApprove(user)
-}
-
 func (u UseCase) getById(id int) (*entity.User, error) {
 	return u.repo.getById(id)
+}
 
+func (u UseCase) createAccess(access *entity.Access) error {
+	return u.repo.createAccess(access)
 }

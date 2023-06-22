@@ -1,4 +1,4 @@
-package web
+package request
 
 /**
  * Created by Goland & VS Code.
@@ -10,12 +10,11 @@ package web
  * Description: BRI-CMP-Service-Backend
  **/
 
-type LoginResponse struct {
-	Status string             `json:"status"`
-	Data   LoginItemsResponse `json:"data"`
-}
-
-type LoginItemsResponse struct {
-	Token    string `json:"token"`
+type ItemUserRequest struct {
+	ID       uint   `json:"id"`
+	Username string `json:"username"`
+	Fullname string `json:"fullname"`
+	Email    string `json:"email"`
 	IsActive bool   `json:"is_active"`
+	Role     uint   `json:"role"`
 }

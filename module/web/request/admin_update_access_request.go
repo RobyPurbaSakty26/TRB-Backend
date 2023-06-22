@@ -1,4 +1,4 @@
-package web
+package request
 
 type UpdateAccessRequest struct {
 	Role string          `json:"role"`

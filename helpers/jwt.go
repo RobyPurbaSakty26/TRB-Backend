@@ -7,17 +7,14 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-// generate token
 func GenerateToken(id, username, role, secret string) (string, error) {
-	// ini sialisasi klaim
+
 	claims := jwt.MapClaims{
 		"sub":      id,
 		"username": username,
 		"role":     role,
 		"exp":      time.Now().Add(time.Hour * 24).Unix(),
 	}
-
-	// tandatangan token dengan kunci rahasia
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	signedToken, err := token.SignedString([]byte(secret))
@@ -36,7 +33,7 @@ type PayloadJWT struct {
 }
 
 func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
-	// Memeriksa keaslian token
+
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
@@ -46,7 +43,6 @@ func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
 		return nil, err
 	}
 
-	// Token valid, dapatkan informasi pengguna dari token
 	claims := token.Claims.(jwt.MapClaims)
 	userID := claims["sub"].(string)
 	userName := claims["username"].(string)

@@ -14,7 +14,6 @@ import (
  * Description: BRI-CMP-Service-Backend
  **/
 
-// start feature : register
 func HashPass(p string) (string, error) {
 	pass := []byte(p)
 	hash, err := bcrypt.GenerateFromPassword(pass, bcrypt.DefaultCost)
@@ -32,5 +31,3 @@ func ComparePass(h, p []byte) error {
 
 	return nil
 }
-
-//end feature : register
