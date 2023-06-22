@@ -1,4 +1,4 @@
-package web
+package response
 
 /**
  * Created by Goland & VS Code.
@@ -10,7 +10,7 @@ package web
  * Description: BRI-CMP-Service-Backend
  **/
 
-type UpdatePasswordRequest struct {
-	Email    string `json:"email"`
-	Password string `json:"password"`
+type AllUserResponse struct {
+	Status string         `json:"status"`
+	Data   []ItemResponse `json:"data"`
 }

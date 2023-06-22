@@ -1,4 +1,4 @@
-package web
+package response
 
 type UserApproveItems struct {
 	ID       uint   `json:"id"`

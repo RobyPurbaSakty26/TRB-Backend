@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-	"log"
 	"os"
 
 	"github.com/joho/godotenv"
@@ -23,7 +22,7 @@ import (
 func InitDB() (*gorm.DB, error) {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		fmt.Println("Error loading .env file")
 	}
 	host := os.Getenv("MYSQL_HOST")
 	user := os.Getenv("MYSQL_USERNAME")

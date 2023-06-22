@@ -1,10 +1,13 @@
 package admin
 
 import (
+	"fmt"
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"net/http"
-	"trb-backend/module/web"
+	"strconv"
+	"trb-backend/module/web/request"
+	"trb-backend/module/web/response"
 )
 
 /**
@@ -22,9 +25,10 @@ type requestAdminHandler struct {
 }
 
 type RequestHandlerAdminInterface interface {
-	GetAllUser(c *gin.Context)
+	GetAllUsers(c *gin.Context)
 	GetAccessUser(c *gin.Context)
 	UpdateAccessUser(c *gin.Context)
+	UserApprove(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -41,10 +45,10 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
-func (h requestAdminHandler) GetAllUser(c *gin.Context) {
+func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
 	result, err := h.ctrl.getAllUser()
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 	c.JSON(http.StatusOK, result)
@@ -55,7 +59,7 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 
 	result, err := h.ctrl.getRoleUser(id)
 	if err != nil {
-		c.JSON(http.StatusNotFound, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusNotFound, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
@@ -64,25 +68,42 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 
 func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 	id := c.Param("id")
-	var req web.UpdateAccessRequest
+	var req request.UpdateAccessRequest
 	err := c.BindJSON(&req)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
 	err = h.ctrl.updateAccessUser(&req, id)
 
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 	result, err := h.ctrl.getRoleUser(id)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, web.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, result)
+}
+
+func (h requestAdminHandler) UserApprove(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+
+	num, err := strconv.Atoi(id)
+	if err != nil {
+		fmt.Printf("Error converting '%s' to int: %s\n", id, err.Error())
+		return
+	}
+	res, err := h.ctrl.UserApprove(num)
+
+	c.JSON(http.StatusOK, res)
 }

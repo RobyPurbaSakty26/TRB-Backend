@@ -1,4 +1,4 @@
-package web
+package response
 
 type UserApproveResponse struct {
 	Status string           `json:"status"`
