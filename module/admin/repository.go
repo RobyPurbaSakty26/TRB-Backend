@@ -44,7 +44,7 @@ func (r repository) getAllUser() ([]entity.User, error) {
 }
 func (r repository) getUserWithRole(id string) (*entity.User, error) {
 	var users entity.User
-	err := r.db.Preload("Role").First(&users, "role_id = ?", id).Error
+	err := r.db.Where("role_id = ?", id).Preload("Role").First(&users).Error
 	if err != nil {
 		return nil, err
 	}
