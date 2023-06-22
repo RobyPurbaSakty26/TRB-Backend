@@ -40,12 +40,15 @@ func SetupRouter() *gin.Engine {
 	AdminRoutes(r, db)
 	r.POST("/register", userHandler.Create)
 	r.POST("/login", userHandler.Login)
-	r.PATCH("/user/forgot-password", userHandler.UpdatePassword)
-	// auth
-	r.GET("/user", middleware.AuthMiddleware, userHandler.GetAllUsers)
-	r.GET("/user/email", middleware.AuthMiddleware, userHandler.GetByEmail)
-	r.GET("/user/username", middleware.AuthMiddleware, userHandler.GetByUsername)
-	r.PATCH("/user/approve/:id", middleware.AuthMiddleware, userHandler.UserApprove)
+	users := r.Group("/user")
+	{
+		users.PATCH("/forgot-password", userHandler.UpdatePassword)
+		secure := users.Use(middleware.AuthMiddleware)
+		{
+			secure.GET("/email", userHandler.GetByEmail)
+			secure.GET("/username", userHandler.GetByUsername)
+		}
+	}
 
 	return r
 }

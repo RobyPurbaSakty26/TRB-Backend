@@ -1,3 +1,7 @@
 ### GET ALL USER
 GET http://localhost:8080/user
 Accept: application/json
+
+### DELETE USER
+DELETE http://localhost:8080/user/{id}
+Accept: application/json

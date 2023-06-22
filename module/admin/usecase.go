@@ -2,7 +2,6 @@ package admin
 
 import (
 	"trb-backend/module/entity"
-	"trb-backend/module/web"
 )
 
 /**
@@ -21,9 +20,13 @@ type useCase struct {
 
 type UseCaseAdminInterface interface {
 	getAllUser() ([]entity.User, error)
-	updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error
+	updateAccess(req *entity.Access, id uint) error
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getUserWithRole(id string) (*entity.User, error)
+	updateRole(role *entity.Role, id uint) error
+	userApprove(user *entity.User) error
+	getById(id uint) (*entity.User, error)
+	deleteUser(id uint) error
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -36,8 +39,8 @@ func (u useCase) getAllUser() ([]entity.User, error) {
 	return u.repo.getAllUser()
 }
 
-func (u useCase) updateAccess(access *entity.Access, req *web.AccessRequest, id uint) error {
-	return u.repo.updateAccess(access, req, id)
+func (u useCase) updateAccess(req *entity.Access, id uint) error {
+	return u.repo.updateAccess(req, id)
 }
 
 func (u useCase) getUserWithRole(id string) (*entity.User, error) {
@@ -46,4 +49,31 @@ func (u useCase) getUserWithRole(id string) (*entity.User, error) {
 
 func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	return u.repo.getAllAccessByRoleId(id)
+}
+
+func (u useCase) updateRole(role *entity.Role, id uint) error {
+	return u.repo.updateRole(role, id)
+}
+func (u useCase) userApprove(user *entity.User) error {
+	return u.repo.userApprove(user)
+}
+
+func (u useCase) getById(id uint) (*entity.User, error) {
+	return u.repo.getById(id)
+}
+
+func (u useCase) deleteUser(id uint) error {
+	// Periksa apakah pengguna dengan ID tersebut ada dalam sistem
+	_, err := u.repo.getById(id)
+	if err != nil {
+		return err
+	}
+
+	// Melakukan penghapusan pengguna dari repository
+	err = u.repo.deleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
