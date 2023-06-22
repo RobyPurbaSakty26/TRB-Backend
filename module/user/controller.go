@@ -140,6 +140,7 @@ func (c controller) getByUsername(username string) (*response.UserResponse, erro
 			Fullname: data.Fullname,
 			Username: data.Username,
 			Email:    data.Email,
+			IsActive: data.Active,
 		},
 	}
 	return res, nil
