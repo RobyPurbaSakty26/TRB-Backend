@@ -2,7 +2,6 @@ package admin
 
 import (
 	"errors"
-	"fmt"
 	"strconv"
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
@@ -97,7 +96,6 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 		return errors.New("cannot parse id string to uint64")
 	}
 	idUint := uint(idUint64)
-	fmt.Println("role name :", req.Role)
 	role := &entity.Role{
 		Name: req.Role,
 	}

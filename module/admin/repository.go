@@ -1,7 +1,6 @@
 package admin
 
 import (
-	"fmt"
 	"gorm.io/gorm"
 	"trb-backend/module/entity"
 )
@@ -60,7 +59,6 @@ func (r repository) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	return access, nil
 }
 func (r repository) updateRole(role *entity.Role, id uint) error {
-	fmt.Println("repo update role:", id, role.Name)
 	return r.db.Model(role).
 		Where("id = ?", id).
 		Update("name", role.Name).Error
