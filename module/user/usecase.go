@@ -28,6 +28,7 @@ type UseCaseInterface interface {
 	updateInputFalse(user *entity.User, count int) error
 	updateIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
+	deleteUser(id uint) error
 	createAccess(access *entity.Access) error
 }
 
@@ -72,4 +73,20 @@ func (u UseCase) getById(id int) (*entity.User, error) {
 
 func (u UseCase) createAccess(access *entity.Access) error {
 	return u.repo.createAccess(access)
+}
+
+func (u UseCase) deleteUser(id uint) error {
+	// Periksa apakah pengguna dengan ID tersebut ada dalam sistem
+	_, err := u.repo.getById(id)
+	if err != nil {
+		return err
+	}
+
+	// Melakukan penghapusan pengguna dari repository
+	err = u.repo.deleteUser(id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
