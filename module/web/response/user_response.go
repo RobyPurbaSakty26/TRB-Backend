@@ -21,4 +21,5 @@ type ItemResponse struct {
 	Email    string `json:"email"`
 	IsActive bool   `json:"is_active"`
 	Role     string `json:"role"`
+	RoleId   uint   `json:"role_id"`
 }

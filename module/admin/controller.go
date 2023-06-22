@@ -53,6 +53,7 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 			Email:    user.Email,
 			IsActive: user.Active,
 			Role:     user.Role.Name,
+			RoleId:   user.RoleId,
 		}
 		result.Data = append(result.Data, item)
 	}
@@ -72,6 +73,7 @@ func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 			Role:     data.Role.Name,
 		},
 	}
+
 	accesses, err := c.useCase.getAllAccessByRoleId(id)
 	if err != nil {
 		return nil, err
@@ -91,7 +93,7 @@ func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
 func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string) error {
 	idUint64, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
-		return errors.New("cannot parse id string to uint")
+		return errors.New("cannot parse id string to uint64")
 	}
 	idUint := uint(idUint64)
 	role := &entity.Role{
@@ -101,6 +103,12 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 	if err != nil {
 		return err
 	}
+	data, err := c.useCase.getById(idUint)
+	if err != nil {
+		return err
+	}
+	err = c.useCase.userApprove(data)
+
 	for _, access := range req.Data {
 		accessReq := &entity.Access{
 			Resource: access.Resource,
