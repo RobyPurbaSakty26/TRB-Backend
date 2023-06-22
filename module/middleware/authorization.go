@@ -28,6 +28,7 @@ func AuthMiddleware(c *gin.Context) {
 
 	secret := os.Getenv("SECRET_KEY")
 	token, err := helpers.VerifyJWT(tokenString, secret)
+
 	if err != nil {
 		c.JSON(http.StatusNonAuthoritativeInfo, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 		c.Abort()
@@ -38,9 +39,24 @@ func AuthMiddleware(c *gin.Context) {
 		ID:       token.ID,
 		Username: token.Username,
 		RoleID:   token.RoleID,
+		RoleName: token.RoleName,
 	}
 
 	c.Set("data", data)
 
+	c.Next()
+}
+
+func AdminAuthorization(c *gin.Context) {
+	claim, _ := c.Get("data")
+	data, _ := claim.(helpers.PayloadJWT)
+
+	if data.RoleName != "admin" {
+		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
+			"error":   "Unauthorized",
+			"message": "You are not allowed to access this page",
+		})
+		return
+	}
 	c.Next()
 }

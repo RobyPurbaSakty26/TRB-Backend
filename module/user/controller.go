@@ -203,7 +203,12 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 
 	secret := os.Getenv("SECRET_KEY")
 
-	token, err := helpers.GenerateToken(strconv.FormatUint(uint64(data.ID), 10), data.Username, strconv.FormatUint(uint64(data.RoleId), 10), secret)
+	token, err := helpers.GenerateToken(
+		strconv.FormatUint(uint64(data.ID), 10),
+		data.Username,
+		strconv.FormatUint(uint64(data.RoleId), 10),
+		data.Role.Name,
+		secret)
 	if err != nil {
 		return nil, err
 	}
