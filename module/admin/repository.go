@@ -64,7 +64,7 @@ func (r repository) updateRole(role *entity.Role, id uint) error {
 		Update("name", role.Name).Error
 }
 func (r repository) updateAccess(request *entity.Access, id uint) error {
-	return r.db.Model(&request).
+	return r.db.Model(request).
 		Where(entity.Access{Resource: request.Resource, RoleId: id}).
 		Updates(map[string]interface{}{
 			"can_read":  request.CanRead,

@@ -103,6 +103,7 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 	if err != nil {
 		return err
 	}
+
 	data, err := c.useCase.getById(idUint)
 	if err != nil {
 		return err
