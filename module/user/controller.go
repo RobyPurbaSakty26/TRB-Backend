@@ -60,32 +60,11 @@ func (c controller) create(req *request.UserCreateRequest) (*response.UserRespon
 
 	hashPass, _ := helpers.HashPass(req.Password)
 
-	role := entity.Role{}
-	err = c.useCase.createRoleUser(&role)
-	if err != nil {
-		return nil, err
-	}
-
-	access := entity.Access{
-		RoleId:   role.ID,
-		Resource: "transaction",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return nil, err
-	}
-	access = entity.Access{
-		RoleId:   role.ID,
-		Resource: "virtual_account",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return nil, err
-	}
 	user := entity.User{
 		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashPass,
-		RoleId:   role.ID,
 	}
 	err = c.useCase.create(&user)
 	if err != nil {
@@ -141,8 +120,7 @@ func (c controller) getByUsername(username string) (*response.UserResponse, erro
 			Username: data.Username,
 			Email:    data.Email,
 			IsActive: data.Active,
-			Role:     data.Fullname,
-			RoleId:   data.RoleId,
+			Role:     data.Role.Name,
 		},
 	}
 	return res, nil
@@ -234,6 +212,11 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 
 func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error) {
 	data, err := c.useCase.getByEmail(req.Email)
+	pass := helpers.ValidatePass(req.Password)
+	if !pass {
+		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
+	}
+
 	if err != nil {
 		return nil, err
 	}

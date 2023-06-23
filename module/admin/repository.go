@@ -21,17 +21,46 @@ type repository struct {
 
 type AdminRepositoryInterface interface {
 	getAllUser() ([]entity.User, error)
+	getAllRoles() ([]entity.Role, error)
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
-	getUserWithRole(id string) (*entity.User, error)
+	getRoleById(id string) (*entity.Role, error)
 	updateAccess(request *entity.Access, id uint) error
 	updateRole(role *entity.Role, id uint) error
 	userApprove(user *entity.User) error
 	getById(id uint) (*entity.User, error)
 	deleteUser(id uint) error
+	createRole(req *entity.Role) error
+	createAccess(access *entity.Access) error
+	deleteRole(id string) error
+	deleteAccess(id uint) error
+	assignRole(roleId uint, userId string) error
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) assignRole(roleId uint, userId string) error {
+	var user entity.User
+	return r.db.Model(&user).
+		Where("id = ?", userId).
+		Update("role_id", roleId).Error
+}
+
+func (r repository) getAllRoles() ([]entity.Role, error) {
+	var roles []entity.Role
+	err := r.db.Find(&roles).Error
+	if err != nil {
+		return nil, err
+	}
+	return roles, nil
+}
+func (r repository) createRole(req *entity.Role) error {
+	return r.db.Create(req).Error
+}
+
+func (r repository) createAccess(access *entity.Access) error {
+	return r.db.Create(access).Error
 }
 
 func (r repository) getAllUser() ([]entity.User, error) {
@@ -42,13 +71,14 @@ func (r repository) getAllUser() ([]entity.User, error) {
 	}
 	return user, nil
 }
-func (r repository) getUserWithRole(id string) (*entity.User, error) {
-	var users entity.User
-	err := r.db.Where("role_id = ?", id).Preload("Role").First(&users).Error
+
+func (r repository) getRoleById(id string) (*entity.Role, error) {
+	var role entity.Role
+	err := r.db.First(&role, id).Error
 	if err != nil {
 		return nil, err
 	}
-	return &users, nil
+	return &role, nil
 }
 func (r repository) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	var access []entity.Access
@@ -72,6 +102,15 @@ func (r repository) updateAccess(request *entity.Access, id uint) error {
 		}).Error
 }
 
+func (r repository) deleteAccess(id uint) error {
+	var access entity.Access
+	return r.db.Delete(&access, "role_id = ?", id).Error
+}
+
+func (r repository) deleteRole(id string) error {
+	var role entity.Role
+	return r.db.Delete(&role, id).Error
+}
 func (r repository) userApprove(user *entity.User) error {
 
 	return r.db.Model(&user).Updates(map[string]interface{}{

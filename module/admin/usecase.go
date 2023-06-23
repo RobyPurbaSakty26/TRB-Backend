@@ -20,19 +20,38 @@ type useCase struct {
 
 type UseCaseAdminInterface interface {
 	getAllUser() ([]entity.User, error)
+	getAllRoles() ([]entity.Role, error)
+	createRole(req *entity.Role) error
 	updateAccess(req *entity.Access, id uint) error
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
-	getUserWithRole(id string) (*entity.User, error)
+	getRoleById(id string) (*entity.Role, error)
 	updateRole(role *entity.Role, id uint) error
 	userApprove(user *entity.User) error
 	getById(id uint) (*entity.User, error)
 	deleteUser(id uint) error
+	createAccess(access *entity.Access) error
+	deleteAccess(id uint) error
+	deleteRole(id string) error
+	assignRole(roleId uint, userId string) error
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+func (u useCase) assignRole(roleId uint, userId string) error {
+	return u.repo.assignRole(roleId, userId)
+}
+func (u useCase) getAllRoles() ([]entity.Role, error) {
+	return u.repo.getAllRoles()
+}
+func (u useCase) createRole(req *entity.Role) error {
+	return u.repo.createRole(req)
+}
+
+func (u useCase) createAccess(access *entity.Access) error {
+	return u.repo.createAccess(access)
 }
 
 func (u useCase) getAllUser() ([]entity.User, error) {
@@ -43,12 +62,20 @@ func (u useCase) updateAccess(req *entity.Access, id uint) error {
 	return u.repo.updateAccess(req, id)
 }
 
-func (u useCase) getUserWithRole(id string) (*entity.User, error) {
-	return u.repo.getUserWithRole(id)
+func (u useCase) getRoleById(id string) (*entity.Role, error) {
+	return u.repo.getRoleById(id)
 }
 
 func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	return u.repo.getAllAccessByRoleId(id)
+}
+
+func (u useCase) deleteAccess(id uint) error {
+	return u.repo.deleteAccess(id)
+}
+
+func (u useCase) deleteRole(id string) error {
+	return u.repo.deleteRole(id)
 }
 
 func (u useCase) updateRole(role *entity.Role, id uint) error {

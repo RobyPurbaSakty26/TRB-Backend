@@ -1,7 +1,7 @@
 package helpers
 
 import (
-	"fmt"
+	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -35,17 +35,24 @@ type PayloadJWT struct {
 }
 
 func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
+	var err error
+	defer func() {
+		if r := recover(); r != nil {
+			err = errors.New("Have a panic")
+		}
+		return
+	}()
 
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		return []byte(secret), nil
 	})
 
 	if err != nil || !token.Valid {
-		fmt.Print(err)
 		return nil, err
 	}
 
 	claims := token.Claims.(jwt.MapClaims)
+
 	userID := claims["sub"].(string)
 	userName := claims["username"].(string)
 	roleId := claims["role_id"].(string)
