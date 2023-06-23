@@ -141,7 +141,7 @@ func (c controller) getByUsername(username string) (*response.UserResponse, erro
 			Username: data.Username,
 			Email:    data.Email,
 			IsActive: data.Active,
-			Role:     data.Fullname,
+			Role:     data.Role.Name,
 			RoleId:   data.RoleId,
 		},
 	}
