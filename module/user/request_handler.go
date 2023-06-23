@@ -1,7 +1,9 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
+	"trb-backend/helpers"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 
@@ -29,6 +31,7 @@ type RequestHandlerInterface interface {
 	GetByUsername(c *gin.Context)
 	Login(c *gin.Context)
 	UpdatePassword(c *gin.Context)
+	WhoIm(c *gin.Context)
 }
 
 func NewRequestHandler(ctrl ControllerUserInterface) RequestHandlerInterface {
@@ -127,5 +130,26 @@ func (h RequestHandler) UpdatePassword(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 		return
 	}
+	c.JSON(http.StatusOK, res)
+}
+
+func (h RequestHandler) WhoIm(c *gin.Context) {
+	data, err := c.Get("data")
+	if err != true {
+		c.JSON(http.StatusNotFound, response.ErrorResponse{Status: "Fail", Message: "Payload not found"})
+		return
+	}
+
+	dataStruct, _ := data.(helpers.PayloadJWT)
+	username := dataStruct.Username
+
+	fmt.Println(username)
+
+	res, r := h.ctrl.getByUsername(username)
+	if r != nil {
+		c.JSON(http.StatusForbidden, response.ErrorResponse{Status: "Fail", Message: "Data not found"})
+		return
+	}
+
 	c.JSON(http.StatusOK, res)
 }

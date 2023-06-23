@@ -47,6 +47,7 @@ func SetupRouter() *gin.Engine {
 		{
 			secure.GET("/email", userHandler.GetByEmail)
 			secure.GET("/username", userHandler.GetByUsername)
+			secure.GET("/who-iam", userHandler.WhoIm)
 		}
 	}
 

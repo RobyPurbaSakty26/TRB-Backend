@@ -7,13 +7,14 @@ import (
 	"github.com/golang-jwt/jwt"
 )
 
-func GenerateToken(id, username, role, secret string) (string, error) {
+func GenerateToken(id, username, roleId, roleName, secret string) (string, error) {
 
 	claims := jwt.MapClaims{
-		"sub":      id,
-		"username": username,
-		"role":     role,
-		"exp":      time.Now().Add(time.Hour * 24).Unix(),
+		"sub":       id,
+		"username":  username,
+		"role_id":   roleId,
+		"role_name": roleName,
+		"exp":       time.Now().Add(time.Hour * 24).Unix(),
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
@@ -30,6 +31,7 @@ type PayloadJWT struct {
 	ID       string
 	Username string
 	RoleID   string
+	RoleName string
 }
 
 func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
@@ -46,13 +48,14 @@ func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
 	claims := token.Claims.(jwt.MapClaims)
 	userID := claims["sub"].(string)
 	userName := claims["username"].(string)
-	role := claims["role"].(string)
+	roleId := claims["role_id"].(string)
+	roleName := claims["role_name"].(string)
 
 	data := PayloadJWT{
-
 		ID:       userID,
 		Username: userName,
-		RoleID:   role,
+		RoleID:   roleId,
+		RoleName: roleName,
 	}
 
 	return &data, nil
