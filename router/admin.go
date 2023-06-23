@@ -21,5 +21,6 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 		admins.DELETE("/role/:id", adminHandler.DeleteRole)
 		admins.PATCH("/active/:id", adminHandler.UserApprove)
 		admins.DELETE("/user/:id", adminHandler.DeleteUser)
+		admins.PUT("/user/role/:id", adminHandler.AssignRole)
 	}
 }

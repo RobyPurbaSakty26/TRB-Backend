@@ -31,6 +31,7 @@ type ControllerAdminInterface interface {
 	deleteUser(id uint) error
 	createRole(req *entity.Role) error
 	deleteRole(id string) error
+	assignRole(req request.AssignRoleRequest, id string) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -38,6 +39,30 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 		useCase: usecase,
 	}
 }
+func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
+	idUint64, err := strconv.ParseUint(req.Id, 10, 64)
+	if err != nil {
+		return errors.New("cannot parse id string to uint64")
+	}
+	roleId := uint(idUint64)
+	idUserUint64, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return errors.New("cannot parse id string to uint64")
+	}
+	idUser := uint(idUserUint64)
+
+	_, err = c.useCase.getById(idUser)
+	if err != nil {
+		return err
+	}
+
+	err = c.useCase.assignRole(roleId, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 	roles, err := c.useCase.getAllRoles()
 	if err != nil {
@@ -166,9 +191,6 @@ func (c controller) deleteRole(id string) error {
 	_, err = c.useCase.getRoleById(id)
 	if err != nil {
 		return err
-	}
-	if err == nil {
-		return errors.New("role id not found")
 	}
 	err = c.useCase.deleteAccess(idUint)
 	if err != nil {
