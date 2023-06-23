@@ -50,7 +50,8 @@ func (r repository) getByEmail(email string) (*entity.User, error) {
 
 func (r repository) getByUsername(username string) (*entity.User, error) {
 	var user entity.User
-	err := r.db.Where("username = ?", username).Preload("Role").First(&user).Error
+	err := r.db.Preload("Role").Where("username = ?", username).First(&user).Error
+
 	if err != nil {
 		return nil, err
 	}

@@ -35,6 +35,12 @@ func AuthMiddleware(c *gin.Context) {
 		return
 	}
 
+	if token == nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Message: "Token Not valid", Status: "False"})
+		c.Abort()
+		return
+	}
+
 	data := helpers.PayloadJWT{
 		ID:       token.ID,
 		Username: token.Username,
