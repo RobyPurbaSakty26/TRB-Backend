@@ -1,7 +1,6 @@
 package user
 
 import (
-	"fmt"
 	"net/http"
 	"trb-backend/helpers"
 	"trb-backend/module/web/request"
@@ -142,8 +141,6 @@ func (h RequestHandler) WhoIm(c *gin.Context) {
 
 	dataStruct, _ := data.(helpers.PayloadJWT)
 	username := dataStruct.Username
-
-	fmt.Println(username)
 
 	res, r := h.ctrl.getByUsername(username)
 	if r != nil {

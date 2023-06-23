@@ -22,13 +22,11 @@ type UseCaseInterface interface {
 	create(user *entity.User) error
 	getByEmail(email string) (*entity.User, error)
 	getByUsername(username string) (*entity.User, error)
-	createRoleUser(role *entity.Role) error
 	getUserAndRole(id uint) (*entity.User, error)
 	updatePassword(user *entity.User, password string) error
 	updateInputFalse(user *entity.User, count int) error
 	updateIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
-	createAccess(access *entity.Access) error
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
@@ -47,9 +45,6 @@ func (u UseCase) getByUsername(username string) (*entity.User, error) {
 	return u.repo.getByUsername(username)
 }
 
-func (u UseCase) createRoleUser(role *entity.Role) error {
-	return u.repo.createRole(role)
-}
 func (u UseCase) getUserAndRole(id uint) (*entity.User, error) {
 	return u.repo.getUserAndRole(id)
 }
@@ -68,8 +63,4 @@ func (u UseCase) updateIsActive(user *entity.User, isActive bool) error {
 
 func (u UseCase) getById(id int) (*entity.User, error) {
 	return u.repo.getById(id)
-}
-
-func (u UseCase) createAccess(access *entity.Access) error {
-	return u.repo.createAccess(access)
 }

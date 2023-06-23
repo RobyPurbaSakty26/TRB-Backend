@@ -24,10 +24,13 @@ type controller struct {
 
 type ControllerAdminInterface interface {
 	getAllUser() (*response.AllUserResponse, error)
-	getRoleUser(id string) (*response.RoleUserResponse, error)
+	getAllRole() (*response.ListRoleResponse, error)
+	getRoleWithAccess(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 	UserApprove(id uint) (*response.UserApproveResponse, error)
 	deleteUser(id uint) error
+	createRole(req *entity.Role) error
+	deleteRole(id string) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -35,7 +38,48 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 		useCase: usecase,
 	}
 }
+func (c controller) getAllRole() (*response.ListRoleResponse, error) {
+	roles, err := c.useCase.getAllRoles()
+	if err != nil {
+		return nil, err
+	}
 
+	result := response.ListRoleResponse{
+		Status: "Success",
+	}
+
+	for _, role := range roles {
+		item := response.ItemRole{
+			Id:   role.ID,
+			Name: role.Name,
+		}
+		result.Data = append(result.Data, item)
+	}
+	return &result, nil
+}
+
+func (c controller) createRole(req *entity.Role) error {
+	err := c.useCase.createRole(req)
+	if err != nil {
+		return err
+	}
+
+	access := entity.Access{
+		RoleId:   req.ID,
+		Resource: "Monitoring",
+	}
+	if err = c.useCase.createAccess(&access); err != nil {
+		return err
+	}
+	access = entity.Access{
+		RoleId:   req.ID,
+		Resource: "Download",
+	}
+	if err = c.useCase.createAccess(&access); err != nil {
+		return err
+	}
+	return nil
+}
 func (c controller) getAllUser() (*response.AllUserResponse, error) {
 	users, err := c.useCase.getAllUser()
 	if err != nil {
@@ -53,27 +97,21 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 			Email:    user.Email,
 			IsActive: user.Active,
 			Role:     user.Role.Name,
-			RoleId:   user.RoleId,
 		}
 		result.Data = append(result.Data, item)
 	}
 	return result, nil
 }
 
-func (c controller) getRoleUser(id string) (*response.RoleUserResponse, error) {
-	data, err := c.useCase.getUserWithRole(id)
-	if err != nil {
-		return nil, err
-	}
+func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, error) {
+	data, err := c.useCase.getRoleById(id)
 
 	result := &response.RoleUserResponse{
 		Status: "Success",
 		Data: response.ItemRoleResponse{
-			Fullname: data.Fullname,
-			Role:     data.Role.Name,
+			Role: data.Name,
 		},
 	}
-
 	accesses, err := c.useCase.getAllAccessByRoleId(id)
 	if err != nil {
 		return nil, err
@@ -104,12 +142,6 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 		return err
 	}
 
-	data, err := c.useCase.getById(idUint)
-	if err != nil {
-		return err
-	}
-	err = c.useCase.userApprove(data)
-
 	for _, access := range req.Data {
 		accessReq := &entity.Access{
 			Resource: access.Resource,
@@ -120,6 +152,32 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 		if err != nil {
 			return err
 		}
+	}
+	return nil
+}
+
+func (c controller) deleteRole(id string) error {
+	idUint64, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return errors.New("cannot parse id string to uint64")
+	}
+	idUint := uint(idUint64)
+
+	_, err = c.useCase.getRoleById(id)
+	if err != nil {
+		return err
+	}
+	if err == nil {
+		return errors.New("role id not found")
+	}
+	err = c.useCase.deleteAccess(idUint)
+	if err != nil {
+		return err
+	}
+
+	err = c.useCase.deleteRole(id)
+	if err != nil {
+		return err
 	}
 	return nil
 }
