@@ -97,7 +97,6 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 			Email:    user.Email,
 			IsActive: user.Active,
 			Role:     user.Role.Name,
-			RoleId:   user.RoleId,
 		}
 		result.Data = append(result.Data, item)
 	}
