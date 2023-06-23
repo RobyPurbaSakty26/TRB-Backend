@@ -32,12 +32,16 @@ type UseCaseAdminInterface interface {
 	createAccess(access *entity.Access) error
 	deleteAccess(id uint) error
 	deleteRole(id string) error
+	assignRole(roleId uint, userId string) error
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+func (u useCase) assignRole(roleId uint, userId string) error {
+	return u.repo.assignRole(roleId, userId)
 }
 func (u useCase) getAllRoles() ([]entity.Role, error) {
 	return u.repo.getAllRoles()

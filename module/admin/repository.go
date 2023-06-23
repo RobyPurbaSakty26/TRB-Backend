@@ -33,10 +33,18 @@ type AdminRepositoryInterface interface {
 	createAccess(access *entity.Access) error
 	deleteRole(id string) error
 	deleteAccess(id uint) error
+	assignRole(roleId uint, userId string) error
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) assignRole(roleId uint, userId string) error {
+	var user entity.User
+	return r.db.Model(&user).
+		Where("id = ?", userId).
+		Update("role_id", roleId).Error
 }
 
 func (r repository) getAllRoles() ([]entity.Role, error) {
