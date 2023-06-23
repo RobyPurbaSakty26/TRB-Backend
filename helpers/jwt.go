@@ -2,7 +2,6 @@ package helpers
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/golang-jwt/jwt"
@@ -39,7 +38,7 @@ func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
 	var err error
 	defer func() {
 		if r := recover(); r != nil {
-			err = errors.New("terjadi panic")
+			err = errors.New("Have a panic")
 		}
 		return
 	}()
@@ -51,8 +50,6 @@ func VerifyJWT(tokenString, secret string) (*PayloadJWT, error) {
 	if err != nil || !token.Valid {
 		return nil, err
 	}
-
-	fmt.Println("data ++++++++++++ ", token.Valid)
 
 	claims := token.Claims.(jwt.MapClaims)
 
