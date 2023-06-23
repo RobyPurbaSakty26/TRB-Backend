@@ -229,6 +229,11 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 
 func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error) {
 	data, err := c.useCase.getByEmail(req.Email)
+	pass := helpers.ValidatePass(req.Password)
+	if !pass {
+		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
+	}
+
 	if err != nil {
 		return nil, err
 	}
