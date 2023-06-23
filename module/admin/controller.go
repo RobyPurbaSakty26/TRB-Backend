@@ -163,6 +163,13 @@ func (c controller) deleteRole(id string) error {
 	}
 	idUint := uint(idUint64)
 
+	_, err = c.useCase.getRoleById(id)
+	if err != nil {
+		return err
+	}
+	if err == nil {
+		return errors.New("role id not found")
+	}
 	err = c.useCase.deleteAccess(idUint)
 	if err != nil {
 		return err
