@@ -5,9 +5,8 @@ type RoleUserResponse struct {
 	Data   ItemRoleResponse `json:"data"`
 }
 type ItemRoleResponse struct {
-	Fullname string       `json:"fullname"`
-	Role     string       `json:"role"`
-	Access   []ItemAccess `json:"access"`
+	Role   string       `json:"role"`
+	Access []ItemAccess `json:"access"`
 }
 
 type ItemAccess struct {
