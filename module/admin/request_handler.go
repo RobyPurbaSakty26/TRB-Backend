@@ -6,6 +6,7 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
+	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 )
@@ -26,10 +27,13 @@ type requestAdminHandler struct {
 
 type RequestHandlerAdminInterface interface {
 	GetAllUsers(c *gin.Context)
-	GetAccessUser(c *gin.Context)
-	UpdateAccessUser(c *gin.Context)
+	GetListAccessRole(c *gin.Context)
+	UpdateAccessRole(c *gin.Context)
 	UserApprove(c *gin.Context)
 	DeleteUser(c *gin.Context)
+	GetAllRoles(c *gin.Context)
+	CreateRole(c *gin.Context)
+	DeleteRole(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -46,6 +50,33 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
+func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
+	result, err := h.ctrl.getAllRole()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
+}
+
+func (h requestAdminHandler) CreateRole(c *gin.Context) {
+	var req entity.Role
+
+	err := c.BindJSON(&req)
+
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+	err = h.ctrl.createRole(&req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "role created"})
+}
+
 func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
 	result, err := h.ctrl.getAllUser()
 	if err != nil {
@@ -55,10 +86,10 @@ func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
+func (h requestAdminHandler) GetListAccessRole(c *gin.Context) {
 	id := c.Param("id")
 
-	result, err := h.ctrl.getRoleUser(id)
+	result, err := h.ctrl.getRoleWithAccess(id)
 	if err != nil {
 		c.JSON(http.StatusNotFound, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
@@ -67,7 +98,7 @@ func (h requestAdminHandler) GetAccessUser(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
+func (h requestAdminHandler) UpdateAccessRole(c *gin.Context) {
 	id := c.Param("id")
 	var req request.UpdateAccessRequest
 	err := c.BindJSON(&req)
@@ -83,7 +114,7 @@ func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
-	result, err := h.ctrl.getRoleUser(id)
+	result, err := h.ctrl.getRoleWithAccess(id)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
@@ -91,6 +122,21 @@ func (h requestAdminHandler) UpdateAccessUser(c *gin.Context) {
 
 	c.JSON(http.StatusOK, result)
 	//c.JSON(http.StatusOK, response.ErrorResponse{Status: "success", Message: "success"})
+}
+
+func (h requestAdminHandler) DeleteRole(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: "ID not found"})
+		return
+	}
+	err := h.ctrl.deleteRole(id)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"status": "success", "message": "Role deleted"})
 }
 
 func (h requestAdminHandler) UserApprove(c *gin.Context) {
