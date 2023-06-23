@@ -60,32 +60,11 @@ func (c controller) create(req *request.UserCreateRequest) (*response.UserRespon
 
 	hashPass, _ := helpers.HashPass(req.Password)
 
-	role := entity.Role{}
-	err = c.useCase.createRoleUser(&role)
-	if err != nil {
-		return nil, err
-	}
-
-	access := entity.Access{
-		RoleId:   role.ID,
-		Resource: "transaction",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return nil, err
-	}
-	access = entity.Access{
-		RoleId:   role.ID,
-		Resource: "virtual_account",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return nil, err
-	}
 	user := entity.User{
 		Fullname: req.Fullname,
 		Username: req.Username,
 		Email:    req.Email,
 		Password: hashPass,
-		RoleId:   role.ID,
 	}
 	err = c.useCase.create(&user)
 	if err != nil {
@@ -142,7 +121,6 @@ func (c controller) getByUsername(username string) (*response.UserResponse, erro
 			Email:    data.Email,
 			IsActive: data.Active,
 			Role:     data.Role.Name,
-			RoleId:   data.RoleId,
 		},
 	}
 	return res, nil

@@ -97,7 +97,6 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 			Email:    user.Email,
 			IsActive: user.Active,
 			Role:     user.Role.Name,
-			RoleId:   user.RoleId,
 		}
 		result.Data = append(result.Data, item)
 	}
@@ -164,6 +163,13 @@ func (c controller) deleteRole(id string) error {
 	}
 	idUint := uint(idUint64)
 
+	_, err = c.useCase.getRoleById(id)
+	if err != nil {
+		return err
+	}
+	if err == nil {
+		return errors.New("role id not found")
+	}
 	err = c.useCase.deleteAccess(idUint)
 	if err != nil {
 		return err
