@@ -1,5 +1,5 @@
 package request
 
 type AssignRoleRequest struct {
-	Id string `json:"id"`
+	RoleId uint `json:"id"`
 }

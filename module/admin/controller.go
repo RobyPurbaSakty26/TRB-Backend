@@ -40,11 +40,7 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
-	idUint64, err := strconv.ParseUint(req.Id, 10, 64)
-	if err != nil {
-		return errors.New("cannot parse id string to uint64")
-	}
-	roleId := uint(idUint64)
+	roleId := req.RoleId
 	idUserUint64, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return errors.New("cannot parse id string to uint64")
