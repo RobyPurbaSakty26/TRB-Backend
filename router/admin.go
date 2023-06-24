@@ -4,12 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 	"trb-backend/module/admin"
+	"trb-backend/module/middleware"
 )
 
 func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 	adminHandler := admin.DefaultRequestAdminHandler(db)
-	admins := r.Group("/admin")
-	//.Use(middleware.AuthMiddleware).Use(middleware.AdminAuthorization)
+	admins := r.Group("/admin").
+		Use(middleware.AuthMiddleware).Use(middleware.AdminAuthorization)
 	{
 		admins.GET("/users", adminHandler.GetAllUsers)
 		admins.POST("/role", adminHandler.CreateRole)
