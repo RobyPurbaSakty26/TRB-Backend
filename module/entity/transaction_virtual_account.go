@@ -12,5 +12,9 @@ type TransactionVirtualAccount struct {
 	Remark           string    `json:"remark"`
 	TellerId         int       `json:"teller_id"`
 	Category         string    `json:"category"`
-	Amount           string    `json:"amount"`
+	Credit           string    `json:"credit"`
+}
+
+func (TransactionVirtualAccount) TableName() string {
+	return "transaction_virtual_account"
 }

@@ -53,7 +53,12 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 }
 
 func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
-	result, err := h.ctrl.getAllTransaction()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	//pageInt, _ := strconv.Atoi(page)
+	//pg := (pageInt - 1) * 6
+	result, err := h.ctrl.getAllTransaction(page, limit)
+
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return

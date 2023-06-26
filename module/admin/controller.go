@@ -32,7 +32,7 @@ type ControllerAdminInterface interface {
 	createRole(req *entity.Role) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
-	getAllTransaction() (*response.MonitoringResponse, error)
+	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -41,15 +41,31 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 
-func (c controller) getAllTransaction() (*response.MonitoringResponse, error) {
-	datas, err := c.useCase.getAllTransaction()
+func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
+	datas, err := c.useCase.getAllTransaction(page, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = datas
 	result := response.MonitoringResponse{
 		Status: "Success",
+	}
+	format := "02-01-2006"
+	for _, data := range datas {
+		tgl := data.LastUpdate.Format(format)
+		saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
+		saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
+		totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
+		item := response.ItemMonitoring{
+			NoRekeningGiro:  data.AccountNo,
+			Currency:        data.Currency,
+			Tanggal:         tgl,
+			PosisiSaldoGiro: saldoGiro,
+			JumlahNoVA:      totalAccVA,
+			PosisiSaldoVA:   saldoVA,
+			Selisih:         saldoGiro - saldoVA,
+		}
+		result.Data = append(result.Data, item)
 	}
 
 	return &result, nil

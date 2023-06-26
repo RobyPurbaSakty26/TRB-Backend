@@ -13,3 +13,7 @@ type TransactionAccount struct {
 	Category        string    `json:"category"`
 	Amount          string    `json:"amount"`
 }
+
+func (TransactionAccount) TableName() string {
+	return "transaction_account"
+}
