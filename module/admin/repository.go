@@ -118,7 +118,7 @@ func (r repository) assignRole(roleId uint, userId string) error {
 }
 func (r repository) getAllRoles() ([]entity.Role, error) {
 	var roles []entity.Role
-	err := r.db.Find(&roles).Error
+	err := r.db.Preload("Accesses").Find(&roles).Error
 	if err != nil {
 		return nil, err
 	}
