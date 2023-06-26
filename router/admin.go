@@ -22,4 +22,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 		admins.DELETE("/user/:userId", adminHandler.DeleteUser)
 		admins.PUT("/user/role/:userId", adminHandler.AssignRole)
 	}
+	r.GET("/admin/transactions", adminHandler.GetAllTransaction)
 }

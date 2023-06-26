@@ -35,6 +35,7 @@ type RequestHandlerAdminInterface interface {
 	CreateRole(c *gin.Context)
 	DeleteRole(c *gin.Context)
 	AssignRole(c *gin.Context)
+	GetAllTransaction(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -49,6 +50,15 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 			),
 		),
 	)
+}
+
+func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
+	result, err := h.ctrl.getAllTransaction()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, result)
 }
 
 func (h requestAdminHandler) AssignRole(c *gin.Context) {

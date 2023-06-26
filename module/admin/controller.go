@@ -32,12 +32,27 @@ type ControllerAdminInterface interface {
 	createRole(req *entity.Role) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
+	getAllTransaction() (*response.MonitoringResponse, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+
+func (c controller) getAllTransaction() (*response.MonitoringResponse, error) {
+	datas, err := c.useCase.getAllTransaction()
+	if err != nil {
+		return nil, err
+	}
+
+	_ = datas
+	result := response.MonitoringResponse{
+		Status: "Success",
+	}
+
+	return &result, nil
 }
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	roleId := req.RoleId

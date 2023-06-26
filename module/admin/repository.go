@@ -39,6 +39,9 @@ type AdminRepositoryInterface interface {
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
 }
+func (r repository) getAllTransaction() ([]entity.MasterAccount, error) {
+	var datas []entity.MasterAccount
+}
 
 func (r repository) assignRole(roleId uint, userId string) error {
 	var user entity.User
