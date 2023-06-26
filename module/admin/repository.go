@@ -38,10 +38,21 @@ type AdminRepositoryInterface interface {
 	getSaldoTransactionGiro(accNo string) (int, error)
 	getSaldoTransactionVA(accNo string) (int, error)
 	getTotalAccVA(accNo string) (int64, error)
+	getListAccess() ([]string, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) getListAccess() ([]string, error) {
+	var names []string
+	var access entity.Access
+	err := r.db.Model(&access).Select("DISTINCT resource").Find(&names).Error
+	if err != nil {
+		return nil, err
+	}
+	return names, nil
 }
 func (r repository) getTotalAccVA(accNo string) (int64, error) {
 	var transaction entity.TransactionVirtualAccount

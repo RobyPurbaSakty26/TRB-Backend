@@ -37,12 +37,17 @@ type UseCaseAdminInterface interface {
 	getSaldoGiro(accNo string) (int, error)
 	getSaldoVA(accNo string) (int, error)
 	getTotalAccVA(accNo string) (int64, error)
+	getListAccess() ([]string, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) getListAccess() ([]string, error) {
+	return u.repo.getListAccess()
 }
 func (u useCase) getTotalAccVA(accNo string) (int64, error) {
 	return u.repo.getTotalAccVA(accNo)

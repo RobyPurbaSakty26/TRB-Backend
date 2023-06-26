@@ -33,12 +33,30 @@ type ControllerAdminInterface interface {
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
 	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
+	getListAccessName() (*response.ResponseAccessName, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
+	res, err := c.useCase.getListAccess()
+	if err != nil {
+		return nil, err
+	}
+
+	result := response.ResponseAccessName{
+		Status: "Success",
+	}
+	for _, data := range res {
+		item := response.ItemAccessName{
+			Name: data,
+		}
+		result.Data = append(result.Data, item)
+	}
+	return &result, nil
 }
 
 func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
