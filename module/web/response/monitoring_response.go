@@ -10,7 +10,7 @@ type ItemMonitoring struct {
 	Currency        string `json:"currency"`
 	Tanggal         string `json:"tanggal"`
 	PosisiSaldoGiro int    `json:"posisi_saldo_giro"`
-	JumlahNoVA      int64  `json:"jumlah_no_va"`
+	JumlahNoVA      int    `json:"jumlah_no_va"`
 	PosisiSaldoVA   int    `json:"posisi_saldo_va"`
 	Selisih         int    `json:"selisih"`
 }

@@ -53,17 +53,17 @@ func (c controller) getAllTransaction(page, limit string) (*response.MonitoringR
 	format := "02-01-2006"
 	for _, data := range datas {
 		tgl := data.LastUpdate.Format(format)
-		saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
-		saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
-		totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
+		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
+		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
+		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
 		item := response.ItemMonitoring{
 			NoRekeningGiro:  data.AccountNo,
 			Currency:        data.Currency,
 			Tanggal:         tgl,
-			PosisiSaldoGiro: saldoGiro,
-			JumlahNoVA:      totalAccVA,
-			PosisiSaldoVA:   saldoVA,
-			Selisih:         saldoGiro - saldoVA,
+			PosisiSaldoGiro: data.AccountBalancePosition,
+			JumlahNoVA:      data.TotalVirtualAccount,
+			PosisiSaldoVA:   data.VirtualAccountBalancePosition,
+			Selisih:         data.AccountBalancePosition - data.VirtualAccountBalancePosition,
 		}
 		result.Data = append(result.Data, item)
 	}
