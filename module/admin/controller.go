@@ -88,19 +88,17 @@ func (c controller) createRole(req *request.UpdateAccessRequest) error {
 		return err
 	}
 
-	access := entity.Access{
-		RoleId:   role.ID,
-		Resource: req.Data,
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return err
-	}
-	access = entity.Access{
-		RoleId:   req.ID,
-		Resource: "Download",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return err
+	for _, access := range req.Data {
+		accessReq := &entity.Access{
+			RoleId:   role.ID,
+			Resource: access.Resource,
+			CanRead:  access.CanRead,
+			CanWrite: access.CanWrite,
+		}
+		err := c.useCase.createAccess(accessReq)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
