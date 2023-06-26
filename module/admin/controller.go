@@ -32,12 +32,61 @@ type ControllerAdminInterface interface {
 	createRole(req *request.UpdateAccessRequest) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
+	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
+	getListAccessName() (*response.ResponseAccessName, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
+	res, err := c.useCase.getListAccess()
+	if err != nil {
+		return nil, err
+	}
+
+	result := response.ResponseAccessName{
+		Status: "Success",
+	}
+	for _, data := range res {
+		item := response.ItemAccessName{
+			Name: data,
+		}
+		result.Data = append(result.Data, item)
+	}
+	return &result, nil
+}
+
+func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
+	datas, err := c.useCase.getAllTransaction(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	result := response.MonitoringResponse{
+		Status: "Success",
+	}
+	format := "02-01-2006"
+	for _, data := range datas {
+		tgl := data.LastUpdate.Format(format)
+		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
+		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
+		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
+		item := response.ItemMonitoring{
+			NoRekeningGiro:  data.AccountNo,
+			Currency:        data.Currency,
+			Tanggal:         tgl,
+			PosisiSaldoGiro: data.AccountBalancePosition,
+			JumlahNoVA:      data.TotalVirtualAccount,
+			PosisiSaldoVA:   data.VirtualAccountBalancePosition,
+			Selisih:         data.AccountBalancePosition - data.VirtualAccountBalancePosition,
+		}
+		result.Data = append(result.Data, item)
+	}
+
+	return &result, nil
 }
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	roleId := req.RoleId
