@@ -29,7 +29,7 @@ type ControllerAdminInterface interface {
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 	UserApprove(id uint) (*response.UserApproveResponse, error)
 	deleteUser(id uint) error
-	createRole(req *entity.Role) error
+	createRole(req *request.UpdateAccessRequest) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
 }
@@ -79,15 +79,18 @@ func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 	return &result, nil
 }
 
-func (c controller) createRole(req *entity.Role) error {
-	err := c.useCase.createRole(req)
+func (c controller) createRole(req *request.UpdateAccessRequest) error {
+	role := entity.Role{
+		Name: req.Role,
+	}
+	err := c.useCase.createRole(&role)
 	if err != nil {
 		return err
 	}
 
 	access := entity.Access{
-		RoleId:   req.ID,
-		Resource: "Monitoring",
+		RoleId:   role.ID,
+		Resource: req.Data,
 	}
 	if err = c.useCase.createAccess(&access); err != nil {
 		return err
