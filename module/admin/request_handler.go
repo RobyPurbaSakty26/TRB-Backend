@@ -6,7 +6,6 @@ import (
 	"gorm.io/gorm"
 	"net/http"
 	"strconv"
-	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 )
@@ -78,14 +77,16 @@ func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
 }
 
 func (h requestAdminHandler) CreateRole(c *gin.Context) {
-	var req entity.Role
+	var req request.UpdateAccessRequest
 
 	err := c.BindJSON(&req)
+	fmt.Println(req)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
+
 	err = h.ctrl.createRole(&req)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
@@ -173,6 +174,7 @@ func (h requestAdminHandler) UserApprove(c *gin.Context) {
 
 	c.JSON(http.StatusOK, res)
 }
+
 func (h requestAdminHandler) DeleteUser(c *gin.Context) {
 	id := c.Param("userId")
 	if id == "" {
