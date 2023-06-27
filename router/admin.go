@@ -9,19 +9,25 @@ import (
 
 func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 	adminHandler := admin.DefaultRequestAdminHandler(db)
-	admins := r.Group("/admin").
-		Use(middleware.AuthMiddleware).Use(middleware.AdminAuthorization)
+	//accessMonitoring := middleware.AccessReadAuthorization("Monitoring", "" db)
+	//accessMonitoring := middleware.AccessMiddleware("Monitoring", "read", db)
+	admins := r.Group("/admin").Use(middleware.AuthMiddleware)
 	{
-		admins.GET("/users", adminHandler.GetAllUsers)
-		admins.POST("/role", adminHandler.CreateRole)
-		admins.GET("/role/:roleId", adminHandler.GetListAccessRole)
-		admins.GET("/roles", adminHandler.GetAllRoles)
-		admins.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
-		admins.DELETE("/role/:roleId", adminHandler.DeleteRole)
-		admins.PATCH("/active/:userId", adminHandler.UserApprove)
-		admins.DELETE("/user/:userId", adminHandler.DeleteUser)
-		admins.PUT("/user/role/:userId", adminHandler.AssignRole)
-		admins.GET("/accesses", adminHandler.GetListAccessName)
-		admins.GET("/transactions", adminHandler.GetAllTransaction)
+		admins.GET("/transactions", middleware.AccessMiddleware("Monitoring", "read", db),
+			adminHandler.GetAllTransaction)
+		adminSecure := admins.Use(middleware.AdminAuthorization)
+		{
+			adminSecure.GET("/users", adminHandler.GetAllUsers)
+			adminSecure.POST("/role", adminHandler.CreateRole)
+			adminSecure.GET("/role/:roleId", adminHandler.GetListAccessRole)
+			adminSecure.GET("/roles", adminHandler.GetAllRoles)
+			adminSecure.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
+			adminSecure.DELETE("/role/:roleId", adminHandler.DeleteRole)
+			adminSecure.PATCH("/active/:userId", adminHandler.UserApprove)
+			adminSecure.DELETE("/user/:userId", adminHandler.DeleteUser)
+			adminSecure.PUT("/user/role/:userId", adminHandler.AssignRole)
+			adminSecure.GET("/accesses", adminHandler.GetListAccessName)
+		}
+		//admins.GET("/transactions", adminHandler.GetAllTransaction)
 	}
 }
