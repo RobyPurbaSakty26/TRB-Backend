@@ -29,9 +29,11 @@ type ControllerAdminInterface interface {
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 	UserApprove(id uint) (*response.UserApproveResponse, error)
 	deleteUser(id uint) error
-	createRole(req *entity.Role) error
+	createRole(req *request.UpdateAccessRequest) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
+	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
+	getListAccessName() (*response.ResponseAccessName, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -39,12 +41,55 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 		useCase: usecase,
 	}
 }
-func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
-	idUint64, err := strconv.ParseUint(req.Id, 10, 64)
+func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
+	res, err := c.useCase.getListAccess()
 	if err != nil {
-		return errors.New("cannot parse id string to uint64")
+		return nil, err
 	}
-	roleId := uint(idUint64)
+
+	result := response.ResponseAccessName{
+		Status: "Success",
+	}
+	for _, data := range res {
+		item := response.ItemAccessName{
+			Name: data,
+		}
+		result.Data = append(result.Data, item)
+	}
+	return &result, nil
+}
+
+func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
+	datas, err := c.useCase.getAllTransaction(page, limit)
+	if err != nil {
+		return nil, err
+	}
+
+	result := response.MonitoringResponse{
+		Status: "Success",
+	}
+	format := "02-01-2006"
+	for _, data := range datas {
+		tgl := data.LastUpdate.Format(format)
+		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
+		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
+		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
+		item := response.ItemMonitoring{
+			NoRekeningGiro:  data.AccountNo,
+			Currency:        data.Currency,
+			Tanggal:         tgl,
+			PosisiSaldoGiro: data.AccountBalancePosition,
+			JumlahNoVA:      data.TotalVirtualAccount,
+			PosisiSaldoVA:   data.VirtualAccountBalancePosition,
+			Selisih:         data.AccountBalancePosition - data.VirtualAccountBalancePosition,
+		}
+		result.Data = append(result.Data, item)
+	}
+
+	return &result, nil
+}
+func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
+	roleId := req.RoleId
 	idUserUint64, err := strconv.ParseUint(id, 10, 64)
 	if err != nil {
 		return errors.New("cannot parse id string to uint64")
@@ -78,30 +123,42 @@ func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 			Id:   role.ID,
 			Name: role.Name,
 		}
+		idStr := strconv.FormatUint(uint64(role.ID), 10)
+		itemAccess, _ := c.useCase.getAllAccessByRoleId(idStr)
+		for _, data := range itemAccess {
+			temp := response.AccessItem{
+				Resource: data.Resource,
+				CanRead:  data.CanRead,
+				CanWrite: data.CanWrite,
+			}
+			item.Access = append(item.Access, temp)
+		}
 		result.Data = append(result.Data, item)
 	}
+
 	return &result, nil
 }
 
-func (c controller) createRole(req *entity.Role) error {
-	err := c.useCase.createRole(req)
+func (c controller) createRole(req *request.UpdateAccessRequest) error {
+	role := entity.Role{
+		Name: req.Role,
+	}
+	err := c.useCase.createRole(&role)
 	if err != nil {
 		return err
 	}
 
-	access := entity.Access{
-		RoleId:   req.ID,
-		Resource: "Monitoring",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return err
-	}
-	access = entity.Access{
-		RoleId:   req.ID,
-		Resource: "Download",
-	}
-	if err = c.useCase.createAccess(&access); err != nil {
-		return err
+	for _, access := range req.Data {
+		accessReq := &entity.Access{
+			RoleId:   role.ID,
+			Resource: access.Resource,
+			CanRead:  access.CanRead,
+			CanWrite: access.CanWrite,
+		}
+		err := c.useCase.createAccess(accessReq)
+		if err != nil {
+			return err
+		}
 	}
 	return nil
 }
@@ -122,6 +179,7 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 			Email:    user.Email,
 			IsActive: user.Active,
 			Role:     user.Role.Name,
+			RoleId:   user.RoleId,
 		}
 		result.Data = append(result.Data, item)
 	}

@@ -34,10 +34,80 @@ type AdminRepositoryInterface interface {
 	deleteRole(id string) error
 	deleteAccess(id uint) error
 	assignRole(roleId uint, userId string) error
+	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
+	getSaldoTransactionGiro(accNo string) (int, error)
+	getSaldoTransactionVA(accNo string) (int, error)
+	getTotalAccVA(accNo string) (int64, error)
+	getListAccess() ([]string, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) getListAccess() ([]string, error) {
+	var names []string
+	var access entity.Access
+	err := r.db.Model(&access).Select("DISTINCT resource").Find(&names).Error
+	if err != nil {
+		return nil, err
+	}
+	return names, nil
+}
+func (r repository) getTotalAccVA(accNo string) (int64, error) {
+	var transaction entity.TransactionVirtualAccount
+	var totalAcc int64
+	err := r.db.Model(&transaction).Where("account_no = ?", accNo).Count(&totalAcc).Error
+	if err != nil {
+		return 0, err
+	}
+	return totalAcc, nil
+}
+
+func (r repository) getSaldoTransactionGiro(accNo string) (int, error) {
+	var transaction entity.TransactionAccount
+	var total, totalDebit, totalCredit int
+
+	err := r.db.Model(&transaction).Select("Sum(amount)").
+		Where(entity.TransactionAccount{Category: "Debit", AccountNo: accNo}).Scan(&totalDebit).Error
+	if err != nil {
+		return 0, err
+	}
+	err = r.db.Model(&transaction).Select("Sum(amount)").
+		Where(entity.TransactionAccount{Category: "Credit", AccountNo: accNo}).Scan(&totalCredit).Error
+	if err != nil {
+		return 0, err
+	}
+	total = totalDebit - totalCredit
+	return total, nil
+}
+
+func (r repository) getSaldoTransactionVA(accNo string) (int, error) {
+	var transaction entity.TransactionVirtualAccount
+	var total, totalDebit, totalCredit int
+
+	err := r.db.Model(&transaction).Select("Sum(credit)").
+		Where(entity.TransactionVirtualAccount{Category: "Debit", AccountNo: accNo}).Scan(&totalDebit).Error
+	if err != nil {
+		return 0, err
+	}
+	err = r.db.Model(&transaction).Select("Sum(credit)").
+		Where(entity.TransactionVirtualAccount{Category: "Credit", AccountNo: accNo}).Scan(&totalCredit).Error
+	if err != nil {
+		return 0, err
+	}
+	total = totalDebit - totalCredit
+	return total, nil
+}
+
+func (r repository) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
+	var datas []entity.MasterAccount
+	err := r.db.Find(&datas).Error
+
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
 }
 
 func (r repository) assignRole(roleId uint, userId string) error {
@@ -46,10 +116,9 @@ func (r repository) assignRole(roleId uint, userId string) error {
 		Where("id = ?", userId).
 		Update("role_id", roleId).Error
 }
-
 func (r repository) getAllRoles() ([]entity.Role, error) {
 	var roles []entity.Role
-	err := r.db.Find(&roles).Error
+	err := r.db.Preload("Accesses").Find(&roles).Error
 	if err != nil {
 		return nil, err
 	}

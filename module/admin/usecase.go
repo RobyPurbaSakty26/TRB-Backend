@@ -33,12 +33,36 @@ type UseCaseAdminInterface interface {
 	deleteAccess(id uint) error
 	deleteRole(id string) error
 	assignRole(roleId uint, userId string) error
+	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
+	getSaldoGiro(accNo string) (int, error)
+	getSaldoVA(accNo string) (int, error)
+	getTotalAccVA(accNo string) (int64, error)
+	getListAccess() ([]string, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) getListAccess() ([]string, error) {
+	return u.repo.getListAccess()
+}
+func (u useCase) getTotalAccVA(accNo string) (int64, error) {
+	return u.repo.getTotalAccVA(accNo)
+}
+
+func (u useCase) getSaldoGiro(accNo string) (int, error) {
+	return u.repo.getSaldoTransactionGiro(accNo)
+}
+
+func (u useCase) getSaldoVA(accNo string) (int, error) {
+	return u.repo.getSaldoTransactionVA(accNo)
+}
+
+func (u useCase) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
+	return u.repo.getAllTransaction(page, limit)
 }
 func (u useCase) assignRole(roleId uint, userId string) error {
 	return u.repo.assignRole(roleId, userId)
