@@ -2,12 +2,13 @@ package admin
 
 import (
 	"fmt"
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"net/http"
 	"strconv"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 /**
@@ -36,6 +37,7 @@ type RequestHandlerAdminInterface interface {
 	AssignRole(c *gin.Context)
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
+	GetVritualAccountByDate(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -50,6 +52,32 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 			),
 		),
 	)
+}
+
+func (h requestAdminHandler) GetVritualAccountByDate(c *gin.Context) {
+	from := c.Query("start_date")
+	to := c.Query("end_date")
+	accNo := c.Query("giro_number")
+	accType := c.Query("type_account")
+
+	if accType != "virtual_account" {
+
+		res, err := h.ctrl.findGiroBydate(accNo, from, to)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, res)
+		return
+	}
+
+	res, err := h.ctrl.findVirtualAccountByByDate(accNo, from, to)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, res)
+
 }
 
 func (h requestAdminHandler) GetListAccessName(c *gin.Context) {

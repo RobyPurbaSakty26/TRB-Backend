@@ -8,7 +8,7 @@ type TransactionVirtualAccount struct {
 	VirtualAccountNo string    `json:"virtual_account_no"`
 	Currency         string    `json:"currency"`
 	TransactionDate  time.Time `json:"transaction_date"`
-	TransactionTime  time.Time `json:"transaction_time"`
+	TransactionTime  []uint8   `json:"transaction_time"`
 	Remark           string    `json:"remark"`
 	TellerId         int       `json:"teller_id"`
 	Category         string    `json:"category"`

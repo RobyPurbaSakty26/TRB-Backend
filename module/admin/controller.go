@@ -2,7 +2,9 @@ package admin
 
 import (
 	"errors"
+	"log"
 	"strconv"
+	"time"
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
@@ -34,6 +36,8 @@ type ControllerAdminInterface interface {
 	assignRole(req request.AssignRoleRequest, id string) error
 	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
 	getListAccessName() (*response.ResponseAccessName, error)
+	findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error)
+	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -41,6 +45,97 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 		useCase: usecase,
 	}
 }
+
+func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
+	// transform request
+	req := request.FillterTransactionByDate{
+		AccNo:     accNo,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+
+	datas, err := c.useCase.findGiroByDate(&req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := response.ResponseTransactionGiro{
+		Status: "Success",
+	}
+	for _, data := range datas {
+		// convert time []uint8 to string and adjust response
+		transactionTimeStrStr := string(data.TransactionTime)
+		parsedTime, err := time.Parse("15:04:05", transactionTimeStrStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		date := data.TransactionDate
+		newDate := date.Format("2006-01-02")
+		Newtime := parsedTime.Format("15:04:05")
+
+		items := response.ResponseTransactionItemsGiroGetByDate{
+			ID:                uint(data.Id),
+			NomorRekeningGiro: data.AccountNo,
+			Currency:          data.Currency,
+			TanggalTransaksi:  newDate,
+			Jam:               Newtime,
+			Remark:            data.Remark,
+			Teller:            data.TellerId,
+			Categoty:          data.Category,
+			Amount:            data.Amount,
+		}
+
+		res.Data = append(res.Data, items)
+	}
+	return &res, nil
+
+}
+
+func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error) {
+	// transform request
+	req := request.FillterTransactionByDate{
+		AccNo:     accNo,
+		StartDate: startDate,
+		EndDate:   endDate,
+	}
+	// call function for get data and checking error
+	datas, err := c.useCase.findVirtualAccountByDate(&req)
+
+	if err != nil {
+		return nil, err
+	}
+	res := response.ResponseTransactionVitualAccount{
+		Status: "Success",
+	}
+	for _, data := range datas {
+		// convert time []uint8 to string and adjust response
+		transactionTimeStrStr := string(data.TransactionTime)
+		parsedTime, err := time.Parse("15:04:05", transactionTimeStrStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		date := data.TransactionDate
+		newDate := date.Format("2006-01-02")
+		Newtime := parsedTime.Format("15:04:05")
+
+		items := response.ResponseTransactionItemsVaGetByDate{
+			ID:                          uint(data.Id),
+			NomorRekeningGiro:           data.AccountNo,
+			NomorRekeningVirtualAccount: data.VirtualAccountNo,
+			Currency:                    data.Currency,
+			TanggalTransaksi:            newDate,
+			Jam:                         Newtime,
+			Remark:                      data.Remark,
+			Teller:                      data.TellerId,
+			Categoty:                    data.Category,
+			Credit:                      data.Credit,
+		}
+
+		res.Data = append(res.Data, items)
+	}
+	return &res, nil
+}
+
 func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 	res, err := c.useCase.getListAccess()
 	if err != nil {

@@ -1,10 +1,11 @@
 package router
 
 import (
-	"github.com/gin-gonic/gin"
-	"gorm.io/gorm"
 	"trb-backend/module/admin"
 	"trb-backend/module/middleware"
+
+	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
 func AdminRoutes(r *gin.Engine, db *gorm.DB) {
@@ -23,5 +24,6 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 		admins.PUT("/user/role/:userId", adminHandler.AssignRole)
 		admins.GET("/accesses", adminHandler.GetListAccessName)
 		admins.GET("/transactions", adminHandler.GetAllTransaction)
+		admins.GET("/transactions-filter-by-date", adminHandler.GetVritualAccountByDate)
 	}
 }
