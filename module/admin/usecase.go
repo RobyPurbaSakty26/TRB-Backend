@@ -2,6 +2,7 @@ package admin
 
 import (
 	"trb-backend/module/entity"
+	"trb-backend/module/web/request"
 )
 
 /**
@@ -34,10 +35,9 @@ type UseCaseAdminInterface interface {
 	deleteRole(id string) error
 	assignRole(roleId uint, userId string) error
 	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
-	getSaldoGiro(accNo string) (int, error)
-	getSaldoVA(accNo string) (int, error)
-	getTotalAccVA(accNo string) (int64, error)
 	getListAccess() ([]string, error)
+	findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -46,21 +46,17 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	}
 }
 
+func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+	return u.repo.getGiroByDate(req)
+}
+
+func (u useCase) findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+	return u.repo.getVirtualAccountByDate(req)
+}
+
 func (u useCase) getListAccess() ([]string, error) {
 	return u.repo.getListAccess()
 }
-func (u useCase) getTotalAccVA(accNo string) (int64, error) {
-	return u.repo.getTotalAccVA(accNo)
-}
-
-func (u useCase) getSaldoGiro(accNo string) (int, error) {
-	return u.repo.getSaldoTransactionGiro(accNo)
-}
-
-func (u useCase) getSaldoVA(accNo string) (int, error) {
-	return u.repo.getSaldoTransactionVA(accNo)
-}
-
 func (u useCase) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
 	return u.repo.getAllTransaction(page, limit)
 }
