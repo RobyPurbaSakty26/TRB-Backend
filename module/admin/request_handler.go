@@ -37,7 +37,7 @@ type RequestHandlerAdminInterface interface {
 	AssignRole(c *gin.Context)
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
-	GetVritualAccountByDate(c *gin.Context)
+	GetTransactionByDate(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -54,7 +54,7 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
-func (h requestAdminHandler) GetVritualAccountByDate(c *gin.Context) {
+func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
 	to := c.Query("end_date")
 	accNo := c.Query("giro_number")
