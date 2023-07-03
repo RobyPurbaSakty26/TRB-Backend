@@ -13,7 +13,7 @@ type ResponseTransactionItemsVaGetByDate struct {
 	TanggalTransaksi            string `json:"tanggal_transaksi"`
 	Jam                         string `json:"jam"`
 	Remark                      string `json:"remark"`
-	Teller                      int    `json:"teller:"`
-	Categoty                    string `json:"categoty"`
+	Teller                      int    `json:"teller"`
+	Categoty                    string `json:"category"`
 	Credit                      string `json:"credit"`
 }
