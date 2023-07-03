@@ -166,9 +166,6 @@ func (c controller) getAllTransaction(page, limit string) (*response.MonitoringR
 	format := "02-01-2006"
 	for _, data := range datas {
 		tgl := data.LastUpdate.Format(format)
-		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
-		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
-		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
 		item := response.ItemMonitoring{
 			NoRekeningGiro:  data.AccountNo,
 			Currency:        data.Currency,

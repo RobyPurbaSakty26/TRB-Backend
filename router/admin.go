@@ -30,4 +30,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
 			adminHandler.GetVritualAccountByDate)
 	}
+	//r.GET("/transactions/download", adminHandler.DownloadTransaction)
 }

@@ -38,6 +38,7 @@ type RequestHandlerAdminInterface interface {
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
 	GetVritualAccountByDate(c *gin.Context)
+	//DownloadTransaction(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -53,6 +54,27 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 		),
 	)
 }
+
+//func (r requestAdminHandler) DownloadTransaction(c *gin.Context) {
+//
+//	c.Header("Content-Disposition", "attachment;filename=data.csv")
+//	c.Header("Content-Type", "text/csv")
+//
+//	writer := csv.NewWriter(c.Writer)
+//	defer writer.Flush()
+//
+//	page := "5"
+//	limit := "50"
+//	result, err := h.ctrl.getAllTransaction(page, limit)
+//	if err != nil {
+//		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
+//		return
+//	}
+//
+//	data_header := []string{}
+//
+//	c.JSON(http.StatusOK, res)
+//}
 
 func (h requestAdminHandler) GetVritualAccountByDate(c *gin.Context) {
 	from := c.Query("start_date")
