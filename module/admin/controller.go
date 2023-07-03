@@ -81,7 +81,7 @@ func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.
 			Jam:               Newtime,
 			Remark:            data.Remark,
 			Teller:            data.TellerId,
-			Categoty:          data.Category,
+			Category:          data.Category,
 			Amount:            data.Amount,
 		}
 
@@ -127,7 +127,7 @@ func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string)
 			Jam:                         Newtime,
 			Remark:                      data.Remark,
 			Teller:                      data.TellerId,
-			Categoty:                    data.Category,
+			Category:                    data.Category,
 			Credit:                      data.Credit,
 		}
 
@@ -215,19 +215,8 @@ func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 			Id:   role.ID,
 			Name: role.Name,
 		}
-		idStr := strconv.FormatUint(uint64(role.ID), 10)
-		itemAccess, _ := c.useCase.getAllAccessByRoleId(idStr)
-		for _, data := range itemAccess {
-			temp := response.AccessItem{
-				Resource: data.Resource,
-				CanRead:  data.CanRead,
-				CanWrite: data.CanWrite,
-			}
-			item.Access = append(item.Access, temp)
-		}
 		result.Data = append(result.Data, item)
 	}
-
 	return &result, nil
 }
 

@@ -12,6 +12,10 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 	adminHandler := admin.DefaultRequestAdminHandler(db)
 	admins := r.Group("/admin").Use(middleware.AuthMiddleware)
 	{
+		admins.GET("/transactions", middleware.AccessMiddleware("Monitoring", "read", db),
+			adminHandler.GetAllTransaction)
+		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
+			adminHandler.GetTransactionByDate)
 		adminSecure := admins.Use(middleware.AdminAuthorization)
 		{
 			adminSecure.GET("/users", adminHandler.GetAllUsers)
@@ -25,10 +29,6 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminSecure.PUT("/user/role/:userId", adminHandler.AssignRole)
 			adminSecure.GET("/accesses", adminHandler.GetListAccessName)
 		}
-		admins.GET("/transactions", middleware.AccessMiddleware("Monitoring", "read", db),
-			adminHandler.GetAllTransaction)
-		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
-			adminHandler.GetVritualAccountByDate)
 	}
 	//r.GET("/transactions/download", adminHandler.DownloadTransaction)
 }
