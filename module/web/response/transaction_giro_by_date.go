@@ -13,6 +13,6 @@ type ResponseTransactionItemsGiroGetByDate struct {
 	Jam               string `json:"jam"`
 	Remark            string `json:"remark"`
 	Teller            int    `json:"teller"`
-	Categoty          string `json:"category"`
+	Category          string `json:"category"`
 	Amount            string `json:"amount"`
 }
