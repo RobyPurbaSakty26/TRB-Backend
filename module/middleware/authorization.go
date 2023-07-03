@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"gorm.io/gorm"
 	"net/http"
 	"os"
@@ -60,11 +61,13 @@ func AdminAuthorization(c *gin.Context) {
 	claim, _ := c.Get("data")
 	data, _ := claim.(helpers.PayloadJWT)
 
-	if data.RoleName != "admin" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized,
+	if data.RoleName != "admin" && data.RoleName != "Admin" {
+		fmt.Println("jalan")
+		c.JSON(http.StatusUnauthorized,
 			response.ErrorResponse{
 				Status:  "Fail",
 				Message: "You are not allowed to access this page"})
+		c.Abort()
 		return
 	}
 	c.Next()
