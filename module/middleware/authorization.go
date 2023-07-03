@@ -60,14 +60,14 @@ func AdminAuthorization(c *gin.Context) {
 	claim, _ := c.Get("data")
 	data, _ := claim.(helpers.PayloadJWT)
 
-	if data.RoleName != "admin" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized,
-			response.ErrorResponse{
-				Status:  "Fail",
-				Message: "You are not allowed to access this page"})
-		return
+	if data.RoleName == "admin" || data.RoleName == "Admin" {
+		c.Next()
 	}
-	c.Next()
+	c.AbortWithStatusJSON(http.StatusUnauthorized,
+		response.ErrorResponse{
+			Status:  "Fail",
+			Message: "You are not allowed to access this page"})
+	return
 }
 
 func AccessMiddleware(resource, permission string, db *gorm.DB) gin.HandlerFunc {
