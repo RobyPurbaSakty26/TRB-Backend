@@ -9,8 +9,6 @@ import (
 
 func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 	adminHandler := admin.DefaultRequestAdminHandler(db)
-	//accessMonitoring := middleware.AccessReadAuthorization("Monitoring", "" db)
-	//accessMonitoring := middleware.AccessMiddleware("Monitoring", "read", db)
 	admins := r.Group("/admin").Use(middleware.AuthMiddleware)
 	{
 		admins.GET("/transactions", middleware.AccessMiddleware("Monitoring", "read", db),
@@ -28,6 +26,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminSecure.PUT("/user/role/:userId", adminHandler.AssignRole)
 			adminSecure.GET("/accesses", adminHandler.GetListAccessName)
 		}
-		//admins.GET("/transactions", adminHandler.GetAllTransaction)
 	}
 }
