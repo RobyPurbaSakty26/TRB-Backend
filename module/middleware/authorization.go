@@ -1,10 +1,13 @@
 package middleware
 
 import (
+	"gorm.io/gorm"
 	"net/http"
 	"os"
+	"strconv"
 	"strings"
 	"trb-backend/helpers"
+	"trb-backend/module/entity"
 	"trb-backend/module/web/response"
 
 	"github.com/gin-gonic/gin"
@@ -58,11 +61,47 @@ func AdminAuthorization(c *gin.Context) {
 	data, _ := claim.(helpers.PayloadJWT)
 
 	if data.RoleName != "admin" {
-		c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{
-			"error":   "Unauthorized",
-			"message": "You are not allowed to access this page",
-		})
+		c.AbortWithStatusJSON(http.StatusUnauthorized,
+			response.ErrorResponse{
+				Status:  "Fail",
+				Message: "You are not allowed to access this page"})
 		return
 	}
 	c.Next()
+}
+
+func AccessMiddleware(resource, permission string, db *gorm.DB) gin.HandlerFunc {
+	return func(c *gin.Context) {
+		claim, _ := c.Get("data")
+		data, _ := claim.(helpers.PayloadJWT)
+		idUint64, _ := strconv.ParseUint(data.RoleID, 10, 64)
+		idUint := uint(idUint64)
+		var access entity.Access
+		err := db.Where(entity.Access{Resource: resource, RoleId: idUint}).
+			First(&access).Error
+
+		if err != nil {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				response.ErrorResponse{
+					Status:  "Failed",
+					Message: err.Error()})
+			return
+		}
+
+		if permission == "read" && access.CanRead != true {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				response.ErrorResponse{
+					Status:  "Failed",
+					Message: "You are not allowed to access this page"})
+			return
+		}
+		if permission == "write" && access.CanWrite != true {
+			c.AbortWithStatusJSON(http.StatusUnauthorized,
+				response.ErrorResponse{
+					Status:  "Failed",
+					Message: "You are not allowed to access this page"})
+			return
+		}
+		c.Next()
+	}
 }

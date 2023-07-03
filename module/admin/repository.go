@@ -37,9 +37,6 @@ type AdminRepositoryInterface interface {
 	deleteAccess(id uint) error
 	assignRole(roleId uint, userId string) error
 	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
-	getSaldoTransactionGiro(accNo string) (int, error)
-	getSaldoTransactionVA(accNo string) (int, error)
-	getTotalAccVA(accNo string) (int64, error)
 	getListAccess() ([]string, error)
 	getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
@@ -76,52 +73,6 @@ func (r repository) getListAccess() ([]string, error) {
 	}
 	return names, nil
 }
-func (r repository) getTotalAccVA(accNo string) (int64, error) {
-	var transaction entity.TransactionVirtualAccount
-	var totalAcc int64
-	err := r.db.Model(&transaction).Where("account_no = ?", accNo).Count(&totalAcc).Error
-	if err != nil {
-		return 0, err
-	}
-	return totalAcc, nil
-}
-
-func (r repository) getSaldoTransactionGiro(accNo string) (int, error) {
-	var transaction entity.TransactionAccount
-	var total, totalDebit, totalCredit int
-
-	err := r.db.Model(&transaction).Select("Sum(amount)").
-		Where(entity.TransactionAccount{Category: "Debit", AccountNo: accNo}).Scan(&totalDebit).Error
-	if err != nil {
-		return 0, err
-	}
-	err = r.db.Model(&transaction).Select("Sum(amount)").
-		Where(entity.TransactionAccount{Category: "Credit", AccountNo: accNo}).Scan(&totalCredit).Error
-	if err != nil {
-		return 0, err
-	}
-	total = totalDebit - totalCredit
-	return total, nil
-}
-
-func (r repository) getSaldoTransactionVA(accNo string) (int, error) {
-	var transaction entity.TransactionVirtualAccount
-	var total, totalDebit, totalCredit int
-
-	err := r.db.Model(&transaction).Select("Sum(credit)").
-		Where(entity.TransactionVirtualAccount{Category: "Debit", AccountNo: accNo}).Scan(&totalDebit).Error
-	if err != nil {
-		return 0, err
-	}
-	err = r.db.Model(&transaction).Select("Sum(credit)").
-		Where(entity.TransactionVirtualAccount{Category: "Credit", AccountNo: accNo}).Scan(&totalCredit).Error
-	if err != nil {
-		return 0, err
-	}
-	total = totalDebit - totalCredit
-	return total, nil
-}
-
 func (r repository) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
 	var datas []entity.MasterAccount
 	err := r.db.Find(&datas).Error
