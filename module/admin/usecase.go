@@ -2,6 +2,7 @@ package admin
 
 import (
 	"trb-backend/module/entity"
+	"trb-backend/module/web/request"
 )
 
 /**
@@ -35,12 +36,22 @@ type UseCaseAdminInterface interface {
 	assignRole(roleId uint, userId string) error
 	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
+	findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+	return u.repo.getGiroByDate(req)
+}
+
+func (u useCase) findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+	return u.repo.getVirtualAccountByDate(req)
 }
 
 func (u useCase) getListAccess() ([]string, error) {

@@ -1,8 +1,10 @@
 package admin
 
 import (
-	"gorm.io/gorm"
 	"trb-backend/module/entity"
+	"trb-backend/module/web/request"
+
+	"gorm.io/gorm"
 )
 
 /**
@@ -36,10 +38,30 @@ type AdminRepositoryInterface interface {
 	assignRole(roleId uint, userId string) error
 	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
+	getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+	var datas []entity.TransactionAccount
+	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, err
+}
+
+func (r repository) getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+	var datas []entity.TransactionVirtualAccount
+	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, nil
 }
 
 func (r repository) getListAccess() ([]string, error) {
