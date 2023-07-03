@@ -81,7 +81,7 @@ func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.
 			Jam:               Newtime,
 			Remark:            data.Remark,
 			Teller:            data.TellerId,
-			Categoty:          data.Category,
+			Category:          data.Category,
 			Amount:            data.Amount,
 		}
 
@@ -127,7 +127,7 @@ func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string)
 			Jam:                         Newtime,
 			Remark:                      data.Remark,
 			Teller:                      data.TellerId,
-			Categoty:                    data.Category,
+			Category:                    data.Category,
 			Credit:                      data.Credit,
 		}
 

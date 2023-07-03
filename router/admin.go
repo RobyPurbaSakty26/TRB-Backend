@@ -29,9 +29,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminSecure.PUT("/user/role/:userId", adminHandler.AssignRole)
 			adminSecure.GET("/accesses", adminHandler.GetListAccessName)
 		}
-		admins.GET("/transactions", middleware.AccessMiddleware("Monitoring", "read", db),
-			adminHandler.GetAllTransaction)
-		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
-			adminHandler.GetTransactionByDate)
 	}
 }
