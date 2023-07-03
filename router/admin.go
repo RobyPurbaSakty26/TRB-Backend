@@ -30,4 +30,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminSecure.GET("/accesses", adminHandler.GetListAccessName)
 		}
 	}
+	//r.GET("/transactions/download", adminHandler.DownloadTransaction)
 }

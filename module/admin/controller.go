@@ -166,9 +166,6 @@ func (c controller) getAllTransaction(page, limit string) (*response.MonitoringR
 	format := "02-01-2006"
 	for _, data := range datas {
 		tgl := data.LastUpdate.Format(format)
-		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
-		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
-		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
 		item := response.ItemMonitoring{
 			NoRekeningGiro:  data.AccountNo,
 			Currency:        data.Currency,
@@ -217,6 +214,16 @@ func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 		item := response.ItemRole{
 			Id:   role.ID,
 			Name: role.Name,
+		}
+		idStr := strconv.FormatUint(uint64(role.ID), 10)
+		itemAccess, _ := c.useCase.getAllAccessByRoleId(idStr)
+		for _, data := range itemAccess {
+			temp := response.AccessItem{
+				Resource: data.Resource,
+				CanRead:  data.CanRead,
+				CanWrite: data.CanWrite,
+			}
+			item.Access = append(item.Access, temp)
 		}
 		result.Data = append(result.Data, item)
 	}
