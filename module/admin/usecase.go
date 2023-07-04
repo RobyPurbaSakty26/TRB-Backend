@@ -34,16 +34,21 @@ type UseCaseAdminInterface interface {
 	deleteAccess(id uint) error
 	deleteRole(id string) error
 	assignRole(roleId uint, userId string) error
-	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
+	getAllTransaction(page, limit int) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
 	findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	TotalDataMaster() (int64, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) TotalDataMaster() (int64, error) {
+	return u.repo.TotalDataMaster()
 }
 
 func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
@@ -57,7 +62,7 @@ func (u useCase) findVirtualAccountByDate(req *request.FillterTransactionByDate)
 func (u useCase) getListAccess() ([]string, error) {
 	return u.repo.getListAccess()
 }
-func (u useCase) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
+func (u useCase) getAllTransaction(page, limit int) ([]entity.MasterAccount, error) {
 	return u.repo.getAllTransaction(page, limit)
 }
 func (u useCase) assignRole(roleId uint, userId string) error {

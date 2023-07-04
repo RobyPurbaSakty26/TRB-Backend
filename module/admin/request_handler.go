@@ -37,7 +37,7 @@ type RequestHandlerAdminInterface interface {
 	AssignRole(c *gin.Context)
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
-	//DownloadTransaction(c *gin.Context)
+	DownloadTransaction(c *gin.Context)
 	GetTransactionByDate(c *gin.Context)
 }
 
@@ -55,26 +55,56 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
-//func (r requestAdminHandler) DownloadTransaction(c *gin.Context) {
-//
-//	c.Header("Content-Disposition", "attachment;filename=data.csv")
-//	c.Header("Content-Type", "text/csv")
-//
-//	writer := csv.NewWriter(c.Writer)
-//	defer writer.Flush()
-//
-//	page := "5"
-//	limit := "50"
-//	result, err := h.ctrl.getAllTransaction(page, limit)
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
-//		return
-//	}
-//
-//	data_header := []string{}
-//
-//	c.JSON(http.StatusOK, res)
-//}
+func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	c.Header("Content-Disposition", "attachment;filename=data.csv")
+	c.Header("Content-Type", "text/csv")
+
+	//writer := csv.NewWriter(c.Writer)
+	//defer writer.Flush()
+
+	result, err := h.ctrl.getAllTransaction1(page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
+		return
+	}
+
+	err = h.ctrl.downloadPageMonitoring(c, result.Data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed to write csv"})
+		return
+	}
+	//data_header := []string{
+	//	"NoRekeningGiro",
+	//	"Currency",
+	//	"Tanggal",
+	//	"PosisiSaldoGiro",
+	//	"JumlahNoVA",
+	//	"PosisiSaldoVA",
+	//	"Selisih",
+	//}
+	//
+	//writer.Write(data_header)
+	//for _, record := range result.Data {
+	//	row := []string{
+	//		`'` + record.NoRekeningGiro,
+	//		record.Currency,
+	//		record.Tanggal,
+	//		strconv.Itoa(record.PosisiSaldoGiro),
+	//		strconv.Itoa(record.JumlahNoVA),
+	//		strconv.Itoa(record.PosisiSaldoVA),
+	//		strconv.Itoa(record.Selisih),
+	//	}
+	//	err := writer.Write(row)
+	//	if err != nil {
+	//		c.String(http.StatusInternalServerError, fmt.Sprintf("Failed to write CSV: %v", err))
+	//		return
+	//	}
+	//}
+
+	c.Status(http.StatusOK)
+}
 
 func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
@@ -114,9 +144,10 @@ func (h requestAdminHandler) GetListAccessName(c *gin.Context) {
 func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
 	page := c.Query("Page")
 	limit := c.Query("Limit")
-	//pageInt, _ := strconv.Atoi(page)
-	//pg := (pageInt - 1) * 6
-	result, err := h.ctrl.getAllTransaction(page, limit)
+	if page == "" {
+		page = "1"
+	}
+	result, err := h.ctrl.getAllTransaction1(page, limit)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})

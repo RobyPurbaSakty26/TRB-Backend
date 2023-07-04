@@ -1,8 +1,11 @@
 package admin
 
 import (
+	"encoding/csv"
 	"errors"
+	"github.com/gin-gonic/gin"
 	"log"
+	"math"
 	"strconv"
 	"time"
 	"trb-backend/module/entity"
@@ -34,16 +37,51 @@ type ControllerAdminInterface interface {
 	createRole(req *request.UpdateAccessRequest) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
-	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
+	//getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
 	getListAccessName() (*response.ResponseAccessName, error)
 	findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error)
 	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
+	getAllTransaction1(page, limit string) (*response.PaginateMonitoring, error)
+	downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+
+func (c controller) downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error {
+	writer := csv.NewWriter(context.Writer)
+	defer writer.Flush()
+
+	data_header := []string{
+		"NoRekeningGiro",
+		"Currency",
+		"Tanggal",
+		"PosisiSaldoGiro",
+		"JumlahNoVA",
+		"PosisiSaldoVA",
+		"Selisih",
+	}
+	writer.Write(data_header)
+	for _, record := range data {
+		row := []string{
+			`'` + record.NoRekeningGiro,
+			record.Currency,
+			record.Tanggal,
+			strconv.Itoa(record.PosisiSaldoGiro),
+			strconv.Itoa(record.JumlahNoVA),
+			strconv.Itoa(record.PosisiSaldoVA),
+			strconv.Itoa(record.Selisih),
+		}
+		err := writer.Write(row)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
@@ -153,15 +191,27 @@ func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 	}
 	return &result, nil
 }
-
-func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
-	datas, err := c.useCase.getAllTransaction(page, limit)
+func (c controller) getAllTransaction1(page, limit string) (*response.PaginateMonitoring, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataMaster()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("cannot get total data master")
+	}
+	countInt := int(count)
+
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateMonitoring{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
 	}
 
-	result := response.MonitoringResponse{
-		Status: "Success",
+	offside := (pageInt - 1) * limitInt
+	datas, err := c.useCase.getAllTransaction(offside, limitInt)
+	if err != nil {
+		return nil, err
 	}
 	format := "02-01-2006"
 	for _, data := range datas {
@@ -180,6 +230,34 @@ func (c controller) getAllTransaction(page, limit string) (*response.MonitoringR
 
 	return &result, nil
 }
+
+//func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
+//	datas, err := c.useCase.getAllTransaction(page, limit)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	result := response.MonitoringResponse{
+//		Status: "Success",
+//	}
+//	format := "02-01-2006"
+//	for _, data := range datas {
+//		tgl := data.LastUpdate.Format(format)
+//		item := response.ItemMonitoring{
+//			NoRekeningGiro:  data.AccountNo,
+//			Currency:        data.Currency,
+//			Tanggal:         tgl,
+//			PosisiSaldoGiro: data.AccountBalancePosition,
+//			JumlahNoVA:      data.TotalVirtualAccount,
+//			PosisiSaldoVA:   data.VirtualAccountBalancePosition,
+//			Selisih:         data.AccountBalancePosition - data.VirtualAccountBalancePosition,
+//		}
+//		result.Data = append(result.Data, item)
+//	}
+//
+//	return &result, nil
+//}
+
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	roleId := req.RoleId
 	idUserUint64, err := strconv.ParseUint(id, 10, 64)

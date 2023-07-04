@@ -36,14 +36,24 @@ type AdminRepositoryInterface interface {
 	deleteRole(id string) error
 	deleteAccess(id uint) error
 	assignRole(roleId uint, userId string) error
-	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
+	getAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
 	getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	TotalDataMaster() (int64, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) TotalDataMaster() (int64, error) {
+	var count int64
+	err := r.db.Table("master_account").Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
 }
 
 func (r repository) getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
@@ -73,9 +83,9 @@ func (r repository) getListAccess() ([]string, error) {
 	}
 	return names, nil
 }
-func (r repository) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
+func (r repository) getAllTransaction(offset, limit int) ([]entity.MasterAccount, error) {
 	var datas []entity.MasterAccount
-	err := r.db.Find(&datas).Error
+	err := r.db.Limit(limit).Offset(offset).Find(&datas).Error
 
 	if err != nil {
 		return nil, err
