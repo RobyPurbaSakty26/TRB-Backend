@@ -58,11 +58,6 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
 	page := c.Query("Page")
 	limit := c.Query("Limit")
-	c.Header("Content-Disposition", "attachment;filename=data.csv")
-	c.Header("Content-Type", "text/csv")
-
-	//writer := csv.NewWriter(c.Writer)
-	//defer writer.Flush()
 
 	result, err := h.ctrl.getAllTransaction1(page, limit)
 	if err != nil {
@@ -72,36 +67,9 @@ func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
 
 	err = h.ctrl.downloadPageMonitoring(c, result.Data)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed to write csv"})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
 	}
-	//data_header := []string{
-	//	"NoRekeningGiro",
-	//	"Currency",
-	//	"Tanggal",
-	//	"PosisiSaldoGiro",
-	//	"JumlahNoVA",
-	//	"PosisiSaldoVA",
-	//	"Selisih",
-	//}
-	//
-	//writer.Write(data_header)
-	//for _, record := range result.Data {
-	//	row := []string{
-	//		`'` + record.NoRekeningGiro,
-	//		record.Currency,
-	//		record.Tanggal,
-	//		strconv.Itoa(record.PosisiSaldoGiro),
-	//		strconv.Itoa(record.JumlahNoVA),
-	//		strconv.Itoa(record.PosisiSaldoVA),
-	//		strconv.Itoa(record.Selisih),
-	//	}
-	//	err := writer.Write(row)
-	//	if err != nil {
-	//		c.String(http.StatusInternalServerError, fmt.Sprintf("Failed to write CSV: %v", err))
-	//		return
-	//	}
-	//}
 
 	c.Status(http.StatusOK)
 }
