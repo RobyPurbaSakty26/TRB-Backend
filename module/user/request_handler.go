@@ -107,7 +107,12 @@ func (h RequestHandler) Login(c *gin.Context) {
 		return
 	}
 
-	res, err := h.ctrl.login(&req)
+	res, input_false, err := h.ctrl.login(&req)
+	if input_false != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponseLogin{Message: err.Error(), InputFalse: *input_false, Status: "Fail"})
+		return
+	}
+
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Message: err.Error(), Status: "Fail"})
 		return
