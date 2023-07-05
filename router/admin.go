@@ -18,6 +18,8 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminHandler.DownloadTransaction)
 		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
 			adminHandler.GetTransactionByDate)
+    admins.GET("/transactions-filter-by-date/download", middleware.AccessMiddleware("Download", "write", db),
+			adminHandler.DownloadTransactionByDate)
 		admins.GET("/users", middleware.AccessMiddleware("User", "read", db),
 			adminHandler.GetAllUsers)
 		writeUser := admins.Use(middleware.AccessMiddleware("User", "write", db))
@@ -38,18 +40,5 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			writeRole.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
 			writeRole.DELETE("/role/:roleId", adminHandler.DeleteRole)
 		}
-		//adminSecure := admins.Use(middleware.AdminAuthorization)
-		//{
-		//	adminSecure.GET("/users", adminHandler.GetAllUsers)
-		//	adminSecure.POST("/role", adminHandler.CreateRole)
-		//	adminSecure.GET("/role/:roleId", adminHandler.GetListAccessRole)
-		//	adminSecure.GET("/roles", adminHandler.GetAllRoles)
-		//	adminSecure.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
-		//	adminSecure.DELETE("/role/:roleId", adminHandler.DeleteRole)
-		//	adminSecure.PATCH("/active/:userId", adminHandler.UserApprove)
-		//	adminSecure.DELETE("/user/:userId", adminHandler.DeleteUser)
-		//	adminSecure.PUT("/user/role/:userId", adminHandler.AssignRole)
-		//	adminSecure.GET("/accesses", adminHandler.GetListAccessName)
-		//}
 	}
 }
