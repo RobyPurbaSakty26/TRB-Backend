@@ -2,12 +2,16 @@ package admin
 
 import (
 	"fmt"
+	"log"
 	"net/http"
+	"reflect"
 	"strconv"
+	"trb-backend/helpers"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
 
 	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
 
@@ -37,7 +41,9 @@ type RequestHandlerAdminInterface interface {
 	AssignRole(c *gin.Context)
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
-	GetVritualAccountByDate(c *gin.Context)
+	DownloadTransaction(c *gin.Context)
+	GetTransactionByDate(c *gin.Context)
+	DownloadTransactionByDate(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -54,7 +60,111 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
-func (h requestAdminHandler) GetVritualAccountByDate(c *gin.Context) {
+func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+
+	result, err := h.ctrl.getAllTransaction(page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
+		return
+	}
+
+	err = h.ctrl.downloadPageMonitoring(c, result.Data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
+func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
+	from := c.Query("start_date")
+	to := c.Query("end_date")
+	accNo := c.Query("giro_number")
+	accType := c.Query("type_account")
+
+	file := excelize.NewFile()
+	sheetName := "Sheet1"
+
+	if accType != "virtual_account" {
+		res, err := h.ctrl.findGiroBydate(accNo, from, to)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+			return
+		}
+
+		headers := helpers.GetStructTags(helpers.HeaderDownloadTransactionGiroByDate{})
+
+		for i, header := range headers {
+			_ = file.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+i)), 1), header)
+		}
+
+		for i, r := range res.Data {
+			rowIndex := i + 2
+			v := reflect.ValueOf(r)
+			for j := 0; j < v.NumField(); j++ {
+				field := v.Field(j)
+
+				err := file.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+j)), rowIndex), field.Interface())
+				if err != nil {
+					c.JSON(http.StatusBadRequest, err)
+				}
+			}
+		}
+
+		c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+		c.Header("Content-Disposition", "attachment; filename=transactionGiro.xlsx")
+
+		err = file.Write(c.Writer)
+		if err != nil {
+			log.Println("Failed to write Excel file:", err)
+			c.AbortWithStatus(http.StatusInternalServerError)
+			return
+		}
+
+		return
+	}
+
+	res, err := h.ctrl.findVirtualAccountByByDate(accNo, from, to)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	headers := helpers.GetStructTags(helpers.HeaderDownloadTransactionVaByDate{})
+
+	for i, header := range headers {
+		_ = file.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+i)), 1), header)
+	}
+
+	for i, r := range res.Data {
+		rowIndex := i + 2
+		v := reflect.ValueOf(r)
+		for j := 0; j < v.NumField(); j++ {
+			field := v.Field(j)
+
+			err := file.SetCellValue(sheetName, fmt.Sprintf("%s%d", string(rune('A'+j)), rowIndex), field.Interface())
+			if err != nil {
+				c.JSON(http.StatusBadRequest, err)
+			}
+		}
+	}
+
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	c.Header("Content-Disposition", "attachment; filename=transaction.xlsx")
+
+	err = file.Write(c.Writer)
+	if err != nil {
+		log.Println("Failed to write Excel file:", err)
+		c.AbortWithStatus(http.StatusInternalServerError)
+		return
+	}
+
+}
+
+
+func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
 	to := c.Query("end_date")
 	accNo := c.Query("giro_number")
@@ -92,8 +202,12 @@ func (h requestAdminHandler) GetListAccessName(c *gin.Context) {
 func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
 	page := c.Query("Page")
 	limit := c.Query("Limit")
-	//pageInt, _ := strconv.Atoi(page)
-	//pg := (pageInt - 1) * 6
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
 	result, err := h.ctrl.getAllTransaction(page, limit)
 
 	if err != nil {
@@ -121,7 +235,15 @@ func (h requestAdminHandler) AssignRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
-	result, err := h.ctrl.getAllRole()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllRole(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
@@ -150,7 +272,15 @@ func (h requestAdminHandler) CreateRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
-	result, err := h.ctrl.getAllUser()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllUser(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return

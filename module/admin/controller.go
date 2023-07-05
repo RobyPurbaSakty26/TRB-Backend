@@ -2,7 +2,11 @@ package admin
 
 import (
 	"errors"
+	"fmt"
+	"github.com/gin-gonic/gin"
+	"github.com/xuri/excelize/v2"
 	"log"
+	"math"
 	"strconv"
 	"time"
 	"trb-backend/module/entity"
@@ -25,8 +29,8 @@ type controller struct {
 }
 
 type ControllerAdminInterface interface {
-	getAllUser() (*response.AllUserResponse, error)
-	getAllRole() (*response.ListRoleResponse, error)
+	getAllUser(page, limit string) (*response.PaginateUserResponse, error)
+	getAllRole(page, limit string) (*response.PaginateRole, error)
 	getRoleWithAccess(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 	UserApprove(id uint) (*response.UserApproveResponse, error)
@@ -34,16 +38,48 @@ type ControllerAdminInterface interface {
 	createRole(req *request.UpdateAccessRequest) error
 	deleteRole(id string) error
 	assignRole(req request.AssignRoleRequest, id string) error
-	getAllTransaction(page, limit string) (*response.MonitoringResponse, error)
 	getListAccessName() (*response.ResponseAccessName, error)
 	findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error)
 	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
+	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
+	downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+
+func (c controller) downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error {
+	currentTime := time.Now()
+	context.Header("Content-Disposition", fmt.Sprintf("attachment;filename=data_%s.xlsx", currentTime.Format("02-Jan-2006")))
+	context.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+	f := excelize.NewFile()
+	f.SetCellValue("Sheet1", "A1", "NoRekeningGiro")
+	f.SetCellValue("Sheet1", "B1", "Currency")
+	f.SetCellValue("Sheet1", "C1", "Tanggal")
+	f.SetCellValue("Sheet1", "D1", "PosisiSaldoGiro")
+	f.SetCellValue("Sheet1", "E1", "JumlahNoVA")
+	f.SetCellValue("Sheet1", "F1", "PosisiSaldoVA")
+	f.SetCellValue("Sheet1", "G1", "Selisih")
+
+	for i, record := range data {
+		row := i + 2
+		f.SetCellValue("Sheet1", fmt.Sprintf("A%d", row), record.NoRekeningGiro)
+		f.SetCellValue("Sheet1", fmt.Sprintf("B%d", row), record.Currency)
+		f.SetCellValue("Sheet1", fmt.Sprintf("C%d", row), record.Tanggal)
+		f.SetCellValue("Sheet1", fmt.Sprintf("D%d", row), record.PosisiSaldoGiro)
+		f.SetCellValue("Sheet1", fmt.Sprintf("E%d", row), record.JumlahNoVA)
+		f.SetCellValue("Sheet1", fmt.Sprintf("F%d", row), record.PosisiSaldoVA)
+		f.SetCellValue("Sheet1", fmt.Sprintf("G%d", row), record.Selisih)
+	}
+	err := f.Write(context.Writer)
+	if err != nil {
+		return errors.New("Failed to export data to excel")
+	}
+	return nil
 }
 
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
@@ -81,7 +117,7 @@ func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.
 			Jam:               Newtime,
 			Remark:            data.Remark,
 			Teller:            data.TellerId,
-			Categoty:          data.Category,
+			Category:          data.Category,
 			Amount:            data.Amount,
 		}
 
@@ -127,7 +163,7 @@ func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string)
 			Jam:                         Newtime,
 			Remark:                      data.Remark,
 			Teller:                      data.TellerId,
-			Categoty:                    data.Category,
+			Category:                    data.Category,
 			Credit:                      data.Credit,
 		}
 
@@ -153,22 +189,31 @@ func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 	}
 	return &result, nil
 }
-
-func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
-	datas, err := c.useCase.getAllTransaction(page, limit)
+func (c controller) getAllTransaction(page, limit string) (*response.PaginateMonitoring, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataMaster()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("cannot get total data master")
+	}
+	countInt := int(count)
+
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateMonitoring{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
 	}
 
-	result := response.MonitoringResponse{
-		Status: "Success",
+	offset := (pageInt - 1) * limitInt
+	datas, err := c.useCase.getAllTransaction(offset, limitInt)
+	if err != nil {
+		return nil, err
 	}
 	format := "02-01-2006"
 	for _, data := range datas {
 		tgl := data.LastUpdate.Format(format)
-		//saldoGiro, _ := c.useCase.getSaldoGiro(data.AccountNo)
-		//saldoVA, _ := c.useCase.getSaldoVA(data.AccountNo)
-		//totalAccVA, _ := c.useCase.getTotalAccVA(data.AccountNo)
 		item := response.ItemMonitoring{
 			NoRekeningGiro:  data.AccountNo,
 			Currency:        data.Currency,
@@ -183,6 +228,7 @@ func (c controller) getAllTransaction(page, limit string) (*response.MonitoringR
 
 	return &result, nil
 }
+
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	roleId := req.RoleId
 	idUserUint64, err := strconv.ParseUint(id, 10, 64)
@@ -203,14 +249,26 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	return nil
 }
 
-func (c controller) getAllRole() (*response.ListRoleResponse, error) {
-	roles, err := c.useCase.getAllRoles()
+func (c controller) getAllRole(page, limit string) (*response.PaginateRole, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataRole()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("cannot get total data master")
 	}
+	countInt := int(count)
 
-	result := response.ListRoleResponse{
-		Status: "Success",
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateRole{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
+	}
+	offset := (pageInt - 1) * limitInt
+	roles, err := c.useCase.getAllRoles(offset, limitInt)
+	if err != nil {
+		return nil, errors.New("Cannot get all data roles")
 	}
 
 	for _, role := range roles {
@@ -230,7 +288,6 @@ func (c controller) getAllRole() (*response.ListRoleResponse, error) {
 		}
 		result.Data = append(result.Data, item)
 	}
-
 	return &result, nil
 }
 
@@ -257,13 +314,26 @@ func (c controller) createRole(req *request.UpdateAccessRequest) error {
 	}
 	return nil
 }
-func (c controller) getAllUser() (*response.AllUserResponse, error) {
-	users, err := c.useCase.getAllUser()
+func (c controller) getAllUser(page, limit string) (*response.PaginateUserResponse, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataUser()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("cannot get total data master")
 	}
-	result := &response.AllUserResponse{
-		Status: "Success",
+	countInt := int(count)
+
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateUserResponse{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
+	}
+	offset := (pageInt - 1) * limitInt
+	users, err := c.useCase.getAllUser(offset, limitInt)
+	if err != nil {
+		return nil, errors.New("Cannot get all data users")
 	}
 
 	for _, user := range users {
@@ -278,7 +348,7 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 		}
 		result.Data = append(result.Data, item)
 	}
-	return result, nil
+	return &result, nil
 }
 
 func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, error) {
