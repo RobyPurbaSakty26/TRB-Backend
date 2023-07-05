@@ -20,7 +20,7 @@ type useCase struct {
 }
 
 type UseCaseAdminInterface interface {
-	getAllUser() ([]entity.User, error)
+	getAllUser(offset, limit int) ([]entity.User, error)
 	getAllRoles(offset, limit int) ([]entity.Role, error)
 	createRole(req *entity.Role) error
 	updateAccess(req *entity.Access, id uint) error
@@ -40,6 +40,7 @@ type UseCaseAdminInterface interface {
 	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
+	TotalDataUser() (int64, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -48,6 +49,9 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	}
 }
 
+func (u useCase) TotalDataUser() (int64, error) {
+	return u.repo.TotalDataMaster()
+}
 func (u useCase) TotalDataRole() (int64, error) {
 	return u.repo.TotalDataMaster()
 }
@@ -83,8 +87,8 @@ func (u useCase) createAccess(access *entity.Access) error {
 	return u.repo.createAccess(access)
 }
 
-func (u useCase) getAllUser() ([]entity.User, error) {
-	return u.repo.getAllUser()
+func (u useCase) getAllUser(offset, limit int) ([]entity.User, error) {
+	return u.repo.getAllUser(offset, limit)
 }
 
 func (u useCase) updateAccess(req *entity.Access, id uint) error {

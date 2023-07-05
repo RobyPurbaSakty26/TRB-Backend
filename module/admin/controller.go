@@ -29,7 +29,7 @@ type controller struct {
 }
 
 type ControllerAdminInterface interface {
-	getAllUser() (*response.AllUserResponse, error)
+	getAllUser(page, limit string) (*response.PaginateUserResponse, error)
 	getAllRole(page, limit string) (*response.PaginateRole, error)
 	getRoleWithAccess(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
@@ -268,7 +268,7 @@ func (c controller) getAllRole(page, limit string) (*response.PaginateRole, erro
 	offset := (pageInt - 1) * limitInt
 	roles, err := c.useCase.getAllRoles(offset, limitInt)
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Cannot get all data roles")
 	}
 
 	for _, role := range roles {
@@ -314,13 +314,26 @@ func (c controller) createRole(req *request.UpdateAccessRequest) error {
 	}
 	return nil
 }
-func (c controller) getAllUser() (*response.AllUserResponse, error) {
-	users, err := c.useCase.getAllUser()
+func (c controller) getAllUser(page, limit string) (*response.PaginateUserResponse, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataUser()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("cannot get total data master")
 	}
-	result := &response.AllUserResponse{
-		Status: "Success",
+	countInt := int(count)
+
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateUserResponse{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
+	}
+	offset := (pageInt - 1) * limitInt
+	users, err := c.useCase.getAllUser(offset, limitInt)
+	if err != nil {
+		return nil, errors.New("Cannot get all data users")
 	}
 
 	for _, user := range users {
@@ -335,7 +348,7 @@ func (c controller) getAllUser() (*response.AllUserResponse, error) {
 		}
 		result.Data = append(result.Data, item)
 	}
-	return result, nil
+	return &result, nil
 }
 
 func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, error) {

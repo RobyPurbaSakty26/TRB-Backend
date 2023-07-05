@@ -182,7 +182,15 @@ func (h requestAdminHandler) CreateRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
-	result, err := h.ctrl.getAllUser()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllUser(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
