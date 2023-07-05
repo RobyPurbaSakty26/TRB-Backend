@@ -1,8 +1,11 @@
 package response
 
-type MonitoringResponse struct {
-	Status string           `json:"status"`
-	Data   []ItemMonitoring `json:"data"`
+type PaginateMonitoring struct {
+	Page       int              `json:"page"`
+	Limit      int              `json:"limit"`
+	Total      int              `json:"total"`
+	TotalPages float64          `json:"total_pages"`
+	Data       []ItemMonitoring `json:"data"`
 }
 
 type ItemMonitoring struct {

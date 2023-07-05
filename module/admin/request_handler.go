@@ -41,7 +41,7 @@ type RequestHandlerAdminInterface interface {
 	AssignRole(c *gin.Context)
 	GetAllTransaction(c *gin.Context)
 	GetListAccessName(c *gin.Context)
-	//DownloadTransaction(c *gin.Context)
+	DownloadTransaction(c *gin.Context)
 	GetTransactionByDate(c *gin.Context)
 	DownloadTransactionByDate(c *gin.Context)
 }
@@ -60,6 +60,24 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 	)
 }
 
+func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+
+	result, err := h.ctrl.getAllTransaction(page, limit)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
+		return
+	}
+
+	err = h.ctrl.downloadPageMonitoring(c, result.Data)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		return
+	}
+
+	c.Status(http.StatusOK)
+}
 func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
 	to := c.Query("end_date")
@@ -145,26 +163,6 @@ func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 
 }
 
-//func (r requestAdminHandler) DownloadTransaction(c *gin.Context) {
-//
-//	c.Header("Content-Disposition", "attachment;filename=data.csv")
-//	c.Header("Content-Type", "text/csv")
-//
-//	writer := csv.NewWriter(c.Writer)
-//	defer writer.Flush()
-//
-//	page := "5"
-//	limit := "50"
-//	result, err := h.ctrl.getAllTransaction(page, limit)
-//	if err != nil {
-//		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
-//		return
-//	}
-//
-//	data_header := []string{}
-//
-//	c.JSON(http.StatusOK, res)
-//}
 
 func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
@@ -204,8 +202,12 @@ func (h requestAdminHandler) GetListAccessName(c *gin.Context) {
 func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
 	page := c.Query("Page")
 	limit := c.Query("Limit")
-	//pageInt, _ := strconv.Atoi(page)
-	//pg := (pageInt - 1) * 6
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
 	result, err := h.ctrl.getAllTransaction(page, limit)
 
 	if err != nil {
@@ -233,7 +235,15 @@ func (h requestAdminHandler) AssignRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
-	result, err := h.ctrl.getAllRole()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllRole(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
@@ -262,7 +272,15 @@ func (h requestAdminHandler) CreateRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllUsers(c *gin.Context) {
-	result, err := h.ctrl.getAllUser()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllUser(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return

@@ -20,8 +20,8 @@ type useCase struct {
 }
 
 type UseCaseAdminInterface interface {
-	getAllUser() ([]entity.User, error)
-	getAllRoles() ([]entity.Role, error)
+	getAllUser(offset, limit int) ([]entity.User, error)
+	getAllRoles(offset, limit int) ([]entity.Role, error)
 	createRole(req *entity.Role) error
 	updateAccess(req *entity.Access, id uint) error
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
@@ -34,16 +34,29 @@ type UseCaseAdminInterface interface {
 	deleteAccess(id uint) error
 	deleteRole(id string) error
 	assignRole(roleId uint, userId string) error
-	getAllTransaction(page, limit string) ([]entity.MasterAccount, error)
+	getAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
 	findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	TotalDataMaster() (int64, error)
+	TotalDataRole() (int64, error)
+	TotalDataUser() (int64, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) TotalDataUser() (int64, error) {
+	return u.repo.TotalDataMaster()
+}
+func (u useCase) TotalDataRole() (int64, error) {
+	return u.repo.TotalDataMaster()
+}
+func (u useCase) TotalDataMaster() (int64, error) {
+	return u.repo.TotalDataMaster()
 }
 
 func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
@@ -57,14 +70,14 @@ func (u useCase) findVirtualAccountByDate(req *request.FillterTransactionByDate)
 func (u useCase) getListAccess() ([]string, error) {
 	return u.repo.getListAccess()
 }
-func (u useCase) getAllTransaction(page, limit string) ([]entity.MasterAccount, error) {
-	return u.repo.getAllTransaction(page, limit)
+func (u useCase) getAllTransaction(offset, limit int) ([]entity.MasterAccount, error) {
+	return u.repo.getAllTransaction(offset, limit)
 }
 func (u useCase) assignRole(roleId uint, userId string) error {
 	return u.repo.assignRole(roleId, userId)
 }
-func (u useCase) getAllRoles() ([]entity.Role, error) {
-	return u.repo.getAllRoles()
+func (u useCase) getAllRoles(offset, limit int) ([]entity.Role, error) {
+	return u.repo.getAllRoles(offset, limit)
 }
 func (u useCase) createRole(req *entity.Role) error {
 	return u.repo.createRole(req)
@@ -74,8 +87,8 @@ func (u useCase) createAccess(access *entity.Access) error {
 	return u.repo.createAccess(access)
 }
 
-func (u useCase) getAllUser() ([]entity.User, error) {
-	return u.repo.getAllUser()
+func (u useCase) getAllUser(offset, limit int) ([]entity.User, error) {
+	return u.repo.getAllUser(offset, limit)
 }
 
 func (u useCase) updateAccess(req *entity.Access, id uint) error {
