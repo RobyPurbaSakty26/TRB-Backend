@@ -75,7 +75,7 @@ func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 			return
 		}
-		// c.JSON(http.StatusOK, res)
+
 		headers := helpers.GetStructTags(helpers.HeaderDownloadTransactionGiroByDate{})
 
 		for i, header := range headers {
@@ -142,7 +142,6 @@ func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 		c.AbortWithStatus(http.StatusInternalServerError)
 		return
 	}
-	// c.JSON(http.StatusOK, res)
 
 }
 
