@@ -1,5 +1,12 @@
 package response
 
+type PaginateRole struct {
+	Page       int        `json:"page"`
+	Limit      int        `json:"limit"`
+	Total      int        `json:"total"`
+	TotalPages float64    `json:"total_pages"`
+	Data       []ItemRole `json:"data"`
+}
 type ListRoleResponse struct {
 	Status string     `json:"status"`
 	Data   []ItemRole `json:"data"`

@@ -23,7 +23,7 @@ type repository struct {
 
 type AdminRepositoryInterface interface {
 	getAllUser() ([]entity.User, error)
-	getAllRoles() ([]entity.Role, error)
+	getAllRoles(offset, limit int) ([]entity.Role, error)
 	getAllAccessByRoleId(id string) ([]entity.Access, error)
 	getRoleById(id string) (*entity.Role, error)
 	updateAccess(request *entity.Access, id uint) error
@@ -41,12 +41,21 @@ type AdminRepositoryInterface interface {
 	getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 	TotalDataMaster() (int64, error)
+	TotalDataRole() (int64, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
 }
 
+func (r repository) TotalDataRole() (int64, error) {
+	var count int64
+	err := r.db.Table("roles").Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
 func (r repository) TotalDataMaster() (int64, error) {
 	var count int64
 	err := r.db.Table("master_account").Count(&count).Error
@@ -99,9 +108,9 @@ func (r repository) assignRole(roleId uint, userId string) error {
 		Where("id = ?", userId).
 		Update("role_id", roleId).Error
 }
-func (r repository) getAllRoles() ([]entity.Role, error) {
+func (r repository) getAllRoles(offset, limit int) ([]entity.Role, error) {
 	var roles []entity.Role
-	err := r.db.Preload("Accesses").Find(&roles).Error
+	err := r.db.Limit(limit).Offset(offset).Find(&roles).Error
 	if err != nil {
 		return nil, err
 	}

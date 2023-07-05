@@ -1,6 +1,7 @@
 package user
 
 import (
+	"errors"
 	"trb-backend/module/entity"
 
 	"gorm.io/gorm"
@@ -43,7 +44,7 @@ func (r repository) getByEmail(email string) (*entity.User, error) {
 	var user entity.User
 	err := r.db.Where("email = ?", email).First(&user).Error
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Email Not Found!")
 	}
 	return &user, nil
 }
@@ -53,7 +54,7 @@ func (r repository) getByUsername(username string) (*entity.User, error) {
 	err := r.db.Preload("Role").Where("username = ?", username).First(&user).Error
 
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Username Not found!")
 	}
 	return &user, nil
 }
@@ -62,7 +63,7 @@ func (r repository) getUserAndRole(id uint) (*entity.User, error) {
 	var user entity.User
 	err := r.db.First(&user, id).Error
 	if err != nil {
-		return nil, err
+		return nil, errors.New("User Id Not Found!")
 	}
 	return &user, nil
 }

@@ -30,7 +30,7 @@ type controller struct {
 
 type ControllerAdminInterface interface {
 	getAllUser() (*response.AllUserResponse, error)
-	getAllRole() (*response.ListRoleResponse, error)
+	getAllRole(page, limit string) (*response.PaginateRole, error)
 	getRoleWithAccess(id string) (*response.RoleUserResponse, error)
 	updateAccessUser(req *request.UpdateAccessRequest, id string) error
 	UserApprove(id uint) (*response.UserApproveResponse, error)
@@ -41,7 +41,7 @@ type ControllerAdminInterface interface {
 	getListAccessName() (*response.ResponseAccessName, error)
 	findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error)
 	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
-	getAllTransaction1(page, limit string) (*response.PaginateMonitoring, error)
+	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
 	downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error
 }
 
@@ -189,7 +189,7 @@ func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 	}
 	return &result, nil
 }
-func (c controller) getAllTransaction1(page, limit string) (*response.PaginateMonitoring, error) {
+func (c controller) getAllTransaction(page, limit string) (*response.PaginateMonitoring, error) {
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
 	count, err := c.useCase.TotalDataMaster()
@@ -206,8 +206,8 @@ func (c controller) getAllTransaction1(page, limit string) (*response.PaginateMo
 		TotalPages: math.Ceil(totalPage),
 	}
 
-	offside := (pageInt - 1) * limitInt
-	datas, err := c.useCase.getAllTransaction(offside, limitInt)
+	offset := (pageInt - 1) * limitInt
+	datas, err := c.useCase.getAllTransaction(offset, limitInt)
 	if err != nil {
 		return nil, err
 	}
@@ -229,33 +229,6 @@ func (c controller) getAllTransaction1(page, limit string) (*response.PaginateMo
 	return &result, nil
 }
 
-//func (c controller) getAllTransaction(page, limit string) (*response.MonitoringResponse, error) {
-//	datas, err := c.useCase.getAllTransaction(page, limit)
-//	if err != nil {
-//		return nil, err
-//	}
-//
-//	result := response.MonitoringResponse{
-//		Status: "Success",
-//	}
-//	format := "02-01-2006"
-//	for _, data := range datas {
-//		tgl := data.LastUpdate.Format(format)
-//		item := response.ItemMonitoring{
-//			NoRekeningGiro:  data.AccountNo,
-//			Currency:        data.Currency,
-//			Tanggal:         tgl,
-//			PosisiSaldoGiro: data.AccountBalancePosition,
-//			JumlahNoVA:      data.TotalVirtualAccount,
-//			PosisiSaldoVA:   data.VirtualAccountBalancePosition,
-//			Selisih:         data.AccountBalancePosition - data.VirtualAccountBalancePosition,
-//		}
-//		result.Data = append(result.Data, item)
-//	}
-//
-//	return &result, nil
-//}
-
 func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	roleId := req.RoleId
 	idUserUint64, err := strconv.ParseUint(id, 10, 64)
@@ -276,14 +249,26 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	return nil
 }
 
-func (c controller) getAllRole() (*response.ListRoleResponse, error) {
-	roles, err := c.useCase.getAllRoles()
+func (c controller) getAllRole(page, limit string) (*response.PaginateRole, error) {
+	pageInt, _ := strconv.Atoi(page)
+	limitInt, _ := strconv.Atoi(limit)
+	count, err := c.useCase.TotalDataRole()
+	if err != nil {
+		return nil, errors.New("cannot get total data master")
+	}
+	countInt := int(count)
+
+	totalPage := float64(countInt) / float64(limitInt)
+	result := response.PaginateRole{
+		Page:       pageInt,
+		Limit:      limitInt,
+		Total:      countInt,
+		TotalPages: math.Ceil(totalPage),
+	}
+	offset := (pageInt - 1) * limitInt
+	roles, err := c.useCase.getAllRoles(offset, limitInt)
 	if err != nil {
 		return nil, err
-	}
-
-	result := response.ListRoleResponse{
-		Status: "Success",
 	}
 
 	for _, role := range roles {

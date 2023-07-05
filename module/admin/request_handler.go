@@ -59,7 +59,7 @@ func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
 	page := c.Query("Page")
 	limit := c.Query("Limit")
 
-	result, err := h.ctrl.getAllTransaction1(page, limit)
+	result, err := h.ctrl.getAllTransaction(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To Retrive Data"})
 		return
@@ -115,7 +115,10 @@ func (h requestAdminHandler) GetAllTransaction(c *gin.Context) {
 	if page == "" {
 		page = "1"
 	}
-	result, err := h.ctrl.getAllTransaction1(page, limit)
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllTransaction(page, limit)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
@@ -142,7 +145,15 @@ func (h requestAdminHandler) AssignRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
-	result, err := h.ctrl.getAllRole()
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+	result, err := h.ctrl.getAllRole(page, limit)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
 		return
