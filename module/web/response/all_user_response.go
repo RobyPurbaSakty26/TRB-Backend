@@ -18,7 +18,3 @@ type PaginateUserResponse struct {
 	TotalPages float64        `json:"total_pages"`
 	Data       []ItemResponse `json:"data"`
 }
-type AllUserResponse struct {
-	Status string         `json:"status"`
-	Data   []ItemResponse `json:"data"`
-}

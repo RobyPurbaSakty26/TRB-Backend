@@ -7,10 +7,6 @@ type PaginateRole struct {
 	TotalPages float64    `json:"total_pages"`
 	Data       []ItemRole `json:"data"`
 }
-type ListRoleResponse struct {
-	Status string     `json:"status"`
-	Data   []ItemRole `json:"data"`
-}
 type ItemRole struct {
 	Id     uint         `json:"id"`
 	Name   string       `json:"name"`

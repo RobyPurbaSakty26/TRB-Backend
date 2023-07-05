@@ -8,11 +8,6 @@ type PaginateMonitoring struct {
 	Data       []ItemMonitoring `json:"data"`
 }
 
-type MonitoringResponse struct {
-	Status string           `json:"status"`
-	Data   []ItemMonitoring `json:"data"`
-}
-
 type ItemMonitoring struct {
 	NoRekeningGiro  string `json:"no_rekening_giro"`
 	Currency        string `json:"currency"`
