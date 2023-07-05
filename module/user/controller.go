@@ -32,7 +32,7 @@ type ControllerUserInterface interface {
 	create(req *request.UserCreateRequest) (*response.UserResponse, error)
 	getByEmail(email string) (*response.UserResponse, error)
 	getByUsername(username string) (*response.UserResponse, error)
-	login(req *request.LoginRequest) (*response.LoginResponse, error)
+	login(req *request.LoginRequest) (*response.LoginResponse, *int, error)
 	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
 }
 
@@ -137,7 +137,7 @@ func isThreeHours(update time.Time) float64 {
 
 }
 
-func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, error) {
+func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, *int, error) {
 	err := godotenv.Load()
 	if err != nil {
 		fmt.Println("Error loading .env file")
@@ -145,7 +145,7 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 
 	data, err := c.useCase.getByUsername(req.Username)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	hour := isThreeHours(data.UpdatedAt)
@@ -157,30 +157,32 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 	if hour > 3 {
 		err := c.useCase.updateInputFalse(user, 0)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	if data.InputFalse >= 3 {
 		err = c.useCase.updateIsActive(user, false)
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
 	}
 
 	data, _ = c.useCase.getByUsername(req.Username)
 
 	if data.Active != true {
-		return nil, errors.New("The account is not yet activated")
+		return nil, nil, errors.New("The account is not yet activated")
 	}
 
 	err = helpers.ComparePass([]byte(data.Password), []byte(req.Password))
 	if err != nil {
 		err := c.useCase.updateInputFalse(user, data.InputFalse+1)
+
 		if err != nil {
-			return nil, err
+			return nil, nil, err
 		}
-		return nil, errors.New("Wrong password")
+		false := data.InputFalse + 1
+		return nil, &false, errors.New("Password wrong")
 	}
 
 	secret := os.Getenv("SECRET_KEY")
@@ -192,7 +194,7 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 		data.Role.Name,
 		secret)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	res := &response.LoginResponse{
@@ -205,10 +207,10 @@ func (c controller) login(req *request.LoginRequest) (*response.LoginResponse, e
 
 	err = c.useCase.updateInputFalse(user, 0)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
-	return res, nil
+	return res, nil, nil
 }
 
 func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error) {

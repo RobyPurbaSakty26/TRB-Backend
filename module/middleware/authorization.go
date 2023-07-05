@@ -2,7 +2,6 @@ package middleware
 
 import (
 	"fmt"
-	"gorm.io/gorm"
 	"net/http"
 	"os"
 	"strconv"
@@ -10,6 +9,8 @@ import (
 	"trb-backend/helpers"
 	"trb-backend/module/entity"
 	"trb-backend/module/web/response"
+
+	"gorm.io/gorm"
 
 	"github.com/gin-gonic/gin"
 )
@@ -34,7 +35,7 @@ func AuthMiddleware(c *gin.Context) {
 	token, err := helpers.VerifyJWT(tokenString, secret)
 
 	if err != nil {
-		c.JSON(http.StatusNonAuthoritativeInfo, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		c.JSON(http.StatusUnauthorized, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 		c.Abort()
 		return
 	}
