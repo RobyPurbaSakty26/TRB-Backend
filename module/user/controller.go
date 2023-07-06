@@ -34,12 +34,55 @@ type ControllerUserInterface interface {
 	getByUsername(username string) (*response.UserResponse, error)
 	login(req *request.LoginRequest) (*response.LoginResponse, *int, error)
 	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
+	whoIm(id int) (*response.WhoImResponse, error)
 }
 
 func NewController(usecase UseCaseInterface) ControllerUserInterface {
 	return controller{
 		useCase: usecase,
 	}
+}
+
+func (c controller) whoIm(id int) (*response.WhoImResponse, error) {
+	// get user
+	user, err := c.useCase.getById(id)
+	if err != nil {
+		return nil, err
+	}
+
+	// get access
+	role_id := user.RoleId
+	fmt.Println(role_id)
+	accesses, err := c.useCase.getAccessByRoleId(role_id)
+	if err != nil {
+		return nil, err
+	}
+
+	fmt.Println(user.Role.Name)
+
+	// response who I am
+	res := &response.WhoImResponse{
+		Status: "Success",
+		Data: response.WhoIamItemResponse{
+			ID:       user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			IsActive: user.Active,
+			RoleName: user.Role.Name,
+			RoleId:   user.RoleId,
+		},
+	}
+	for _, access := range accesses {
+		items := response.AccessItemWhoIm{
+			Resource: access.Resource,
+			CanRead:  access.CanRead,
+			CanWrite: access.CanWrite,
+		}
+		res.Data.Permission = append(res.Data.Permission, items)
+	}
+
+	return res, nil
+
 }
 
 func (c controller) create(req *request.UserCreateRequest) (*response.UserResponse, error) {

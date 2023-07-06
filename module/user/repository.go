@@ -30,10 +30,21 @@ type UserRepositoryInterface interface {
 	updateInputFalse(user *entity.User, count int) error
 	updateStatusIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
+	getAccessByRoleId(id uint) ([]entity.Access, error)
 }
 
 func NewRepository(db *gorm.DB) UserRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) getAccessByRoleId(id uint) ([]entity.Access, error) {
+	var access []entity.Access
+
+	err := r.db.Where("role_id = ?", id).Find(&access).Error
+	if err != nil {
+		return nil, err
+	}
+	return access, nil
 }
 
 func (r repository) save(user *entity.User) error {
@@ -82,8 +93,12 @@ func (r repository) updateStatusIsActive(user *entity.User, isActive bool) error
 
 func (r repository) getById(id int) (*entity.User, error) {
 	var user entity.User
-	err := r.db.First(&user, id).Error
 
-	return &user, err
+	err := r.db.Preload("Role").First(&user, id).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &user, nil
 
 }
