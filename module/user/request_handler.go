@@ -1,7 +1,9 @@
 package user
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"trb-backend/helpers"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
@@ -145,13 +147,21 @@ func (h RequestHandler) WhoIm(c *gin.Context) {
 	}
 
 	dataStruct, _ := data.(helpers.PayloadJWT)
-	username := dataStruct.Username
+	// username := dataStruct.Username
+	id := dataStruct.ID
+	num, r := strconv.Atoi(id)
+	if r != nil {
+		fmt.Println("Error:", r)
+		return
+	}
 
-	res, r := h.ctrl.getByUsername(username)
+	res1, r := h.ctrl.whoIm(num)
+
+	// res, r := h.ctrl.getByUsername(username)
 	if r != nil {
 		c.JSON(http.StatusForbidden, response.ErrorResponse{Status: "Fail", Message: "Data not found"})
 		return
 	}
 
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusOK, res1)
 }
