@@ -44,6 +44,8 @@ type ControllerAdminInterface interface {
 	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
 	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
 	downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error
+	findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error)
+	findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -81,6 +83,129 @@ func (c controller) downloadPageMonitoring(context *gin.Context, data []response
 		return errors.New("Failed to export data to excel")
 	}
 	return nil
+}
+
+func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
+	// transform request
+	offset := (page - 1) * limit
+	req := request.FillterTransactionByDate{
+		AccNo:     accNo,
+		StartDate: startDate,
+		EndDate:   endDate,
+		Page:      offset,
+		Limit:     limit,
+	}
+
+	count, err := c.useCase.TotalDataTransactionGiro(&req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	countInt := int(count)
+	totalPage := float64(countInt) / float64(limit)
+
+	datas, err := c.useCase.findGiroByDatePagination(&req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := response.ResponseTransactionGiro{
+		Status:    "Success",
+		TotalPage: int(math.Ceil(totalPage)),
+		Limit:     limit,
+		Total:     countInt,
+		Page:      page,
+	}
+	for _, data := range datas {
+		// convert time []uint8 to string and adjust response
+		transactionTimeStrStr := string(data.TransactionTime)
+		parsedTime, err := time.Parse("15:04:05", transactionTimeStrStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		date := data.TransactionDate
+		newDate := date.Format("2006-01-02")
+		Newtime := parsedTime.Format("15:04:05")
+
+		items := response.ResponseTransactionItemsGiroGetByDate{
+			ID:                uint(data.Id),
+			NomorRekeningGiro: data.AccountNo,
+			Currency:          data.Currency,
+			TanggalTransaksi:  newDate,
+			Jam:               Newtime,
+			Remark:            data.Remark,
+			Teller:            data.TellerId,
+			Category:          data.Category,
+			Amount:            data.Amount,
+		}
+
+		res.Data = append(res.Data, items)
+	}
+	return &res, nil
+
+}
+
+func (c controller) findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error) {
+	// transform request
+	offset := (page - 1) * limit
+	req := request.FillterTransactionByDate{
+		AccNo:     accNo,
+		StartDate: startDate,
+		EndDate:   endDate,
+		Page:      offset,
+		Limit:     limit,
+	}
+
+	count, err := c.useCase.TotalDataTransactionVa(&req)
+
+	if err != nil {
+		return nil, err
+	}
+
+	countInt := int(count)
+	totalPage := float64(countInt) / float64(limit)
+
+	datas, err := c.useCase.findVaByDatePagination(&req)
+	if err != nil {
+		return nil, err
+	}
+
+	res := response.ResponseTransactionVitualAccount{
+		Status:    "Success",
+		TotalPage: int(math.Ceil(totalPage)),
+		Limit:     limit,
+		Total:     countInt,
+		Page:      page,
+	}
+	for _, data := range datas {
+		// convert time []uint8 to string and adjust response
+		transactionTimeStrStr := string(data.TransactionTime)
+		parsedTime, err := time.Parse("15:04:05", transactionTimeStrStr)
+		if err != nil {
+			log.Fatal(err)
+		}
+		date := data.TransactionDate
+		newDate := date.Format("2006-01-02")
+		Newtime := parsedTime.Format("15:04:05")
+
+		items := response.ResponseTransactionItemsVaGetByDate{
+			ID:                          uint(data.Id),
+			NomorRekeningGiro:           data.AccountNo,
+			NomorRekeningVirtualAccount: data.VirtualAccountNo,
+			Currency:                    data.Currency,
+			TanggalTransaksi:            newDate,
+			Jam:                         Newtime,
+			Remark:                      data.Remark,
+			Teller:                      data.TellerId,
+			Category:                    data.Category,
+			Credit:                      data.Credit,
+		}
+
+		res.Data = append(res.Data, items)
+	}
+	return &res, nil
+
 }
 
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
