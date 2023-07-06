@@ -18,27 +18,32 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 			adminHandler.DownloadTransaction)
 		admins.GET("/transactions-filter-by-date", middleware.AccessMiddleware("Download", "read", db),
 			adminHandler.GetTransactionByDate)
-    admins.GET("/transactions-filter-by-date/download", middleware.AccessMiddleware("Download", "write", db),
+		admins.GET("/transactions-filter-by-date/download", middleware.AccessMiddleware("Download", "write", db),
 			adminHandler.DownloadTransactionByDate)
-		admins.GET("/users", middleware.AccessMiddleware("User", "read", db),
+	}
+	roleReadAccess := r.Group("/admin").Use(middleware.AuthMiddleware).
+		Use(middleware.AccessMiddleware("Role", "read", db))
+	{
+		roleReadAccess.GET("/role/:roleId", adminHandler.GetListAccessRole)
+		roleReadAccess.GET("/roles", adminHandler.GetAllRoles)
+		roleReadAccess.GET("/accesses", adminHandler.GetListAccessName)
+	}
+	roleWriteAccess := r.Group("/admin").Use(middleware.AuthMiddleware).
+		Use(middleware.AccessMiddleware("Role", "write", db))
+	{
+		roleWriteAccess.POST("/role", adminHandler.CreateRole)
+		roleWriteAccess.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
+		roleWriteAccess.DELETE("/role/:roleId", adminHandler.DeleteRole)
+	}
+	userAccess := r.Group("/admin").Use(middleware.AuthMiddleware)
+	{
+		userAccess.GET("/users", middleware.AccessMiddleware("User", "read", db),
 			adminHandler.GetAllUsers)
-		writeUser := admins.Use(middleware.AccessMiddleware("User", "write", db))
+		writeUser := userAccess.Use(middleware.AccessMiddleware("User", "write", db))
 		{
 			writeUser.PATCH("/active/:userId", adminHandler.UserApprove)
 			writeUser.DELETE("/user/:userId", adminHandler.DeleteUser)
 			writeUser.PUT("/user/role/:userId", adminHandler.AssignRole)
-		}
-		readRole := admins.Use(middleware.AccessMiddleware("Role", "read", db))
-		{
-			readRole.GET("/role/:roleId", adminHandler.GetListAccessRole)
-			readRole.GET("/roles", adminHandler.GetAllRoles)
-			readRole.GET("/accesses", adminHandler.GetListAccessName)
-		}
-		writeRole := admins.Use(middleware.AccessMiddleware("Role", "write", db))
-		{
-			writeRole.POST("/role", adminHandler.CreateRole)
-			writeRole.PUT("/role/:roleId", adminHandler.UpdateAccessRole)
-			writeRole.DELETE("/role/:roleId", adminHandler.DeleteRole)
 		}
 	}
 }
