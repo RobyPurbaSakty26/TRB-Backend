@@ -163,7 +163,6 @@ func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 
 }
 
-
 func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
 	to := c.Query("end_date")
@@ -255,7 +254,6 @@ func (h requestAdminHandler) CreateRole(c *gin.Context) {
 	var req request.UpdateAccessRequest
 
 	err := c.BindJSON(&req)
-	fmt.Println(req)
 
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Failed", Message: err.Error()})
