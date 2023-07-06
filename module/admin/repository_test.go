@@ -374,3 +374,88 @@ func Test_repository_getAllRoles(t *testing.T) {
 		})
 	}
 }
+
+func Test_repository_createRole(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *entity.Role
+	}
+
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &entity.Role{
+		Name: "admin",
+	}
+	a := args{
+		req: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("INSERT INTO `roles` (name) values (admin)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+
+	name = "success"
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"name"}).
+			AddRow("admin"),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: false,
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.createRole(tt.args.req); (err != nil) != tt.wantErr {
+				t.Errorf("createRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_createAccess(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		access *entity.Access
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}{
+		// TODO: Add test cases.
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.createAccess(tt.args.access); (err != nil) != tt.wantErr {
+				t.Errorf("createAccess() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
