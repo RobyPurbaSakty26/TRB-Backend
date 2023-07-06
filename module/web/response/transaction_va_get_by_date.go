@@ -1,8 +1,12 @@
 package response
 
 type ResponseTransactionVitualAccount struct {
-	Status string                                `json:"status" `
-	Data   []ResponseTransactionItemsVaGetByDate `json:"data"`
+	Status    string                                `json:"status" `
+	Limit     int                                   `json:"limit"`
+	Total     int                                   `json:"total"`
+	TotalPage int                                   `json:"total_page"`
+	Page      int                                   `json:"page"`
+	Data      []ResponseTransactionItemsVaGetByDate `json:"data"`
 }
 
 type ResponseTransactionItemsVaGetByDate struct {

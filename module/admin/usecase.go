@@ -41,12 +41,24 @@ type UseCaseAdminInterface interface {
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
+	findGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	findVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
+	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error) {
+	return u.repo.TotalDataTransactionGiro(req)
+}
+
+func (u useCase) TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error) {
+	return u.repo.TotalDataTransactionGiro(req)
 }
 
 func (u useCase) TotalDataUser() (int64, error) {
@@ -57,6 +69,14 @@ func (u useCase) TotalDataRole() (int64, error) {
 }
 func (u useCase) TotalDataMaster() (int64, error) {
 	return u.repo.TotalDataMaster()
+}
+
+func (u useCase) findGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+	return u.repo.getGiroByDatePagination(req)
+}
+
+func (u useCase) findVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+	return u.repo.getVaByDatePagination(req)
 }
 
 func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {

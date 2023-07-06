@@ -1,8 +1,12 @@
 package response
 
 type ResponseTransactionGiro struct {
-	Status string                                  `json:"status" `
-	Data   []ResponseTransactionItemsGiroGetByDate `json:"data"`
+	Status    string                                  `json:"status" `
+	Limit     int                                     `json:"limit"`
+	Total     int                                     `json:"total"`
+	TotalPage int                                     `json:"total_page"`
+	Page      int                                     `json:"page"`
+	Data      []ResponseTransactionItemsGiroGetByDate `json:"data"`
 }
 
 type ResponseTransactionItemsGiroGetByDate struct {
