@@ -27,10 +27,15 @@ type UseCaseInterface interface {
 	updateInputFalse(user *entity.User, count int) error
 	updateIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
+	getAccessByRoleId(id uint) ([]entity.Access, error)
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
 	return UseCase{repo: repo}
+}
+
+func (u UseCase) getAccessByRoleId(id uint) ([]entity.Access, error) {
+	return u.repo.getAccessByRoleId(id)
 }
 
 func (u UseCase) create(user *entity.User) error {

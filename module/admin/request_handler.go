@@ -163,7 +163,6 @@ func (h requestAdminHandler) DownloadTransactionByDate(c *gin.Context) {
 
 }
 
-
 func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	from := c.Query("start_date")
 	to := c.Query("end_date")
