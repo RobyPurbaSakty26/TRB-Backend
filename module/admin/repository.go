@@ -43,6 +43,10 @@ type AdminRepositoryInterface interface {
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
+	getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
+	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
@@ -51,7 +55,7 @@ func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 
 func (r repository) TotalDataUser() (int64, error) {
 	var count int64
-	err := r.db.Table("users").Where("deleted_at is NULL").Count(&count).Error
+	err := r.db.Table("users").Where("deleted_at IS NULL").Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -59,7 +63,7 @@ func (r repository) TotalDataUser() (int64, error) {
 }
 func (r repository) TotalDataRole() (int64, error) {
 	var count int64
-	err := r.db.Table("roles").Where("deleted_at is NULL").Count(&count).Error
+	err := r.db.Table("roles").Where("deleted_at IS NULL").Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
@@ -72,6 +76,42 @@ func (r repository) TotalDataMaster() (int64, error) {
 		return 0, err
 	}
 	return count, nil
+}
+
+func (r repository) TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error) {
+	var count int64
+	err := r.db.Table("transaction_account").Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r repository) TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error) {
+	var count int64
+	err := r.db.Table("transaction_virtual_account").Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r repository) getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+	var datas []entity.TransactionAccount
+	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Limit(req.Limit).Offset(req.Page).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, err
+}
+
+func (r repository) getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+	var datas []entity.TransactionVirtualAccount
+	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Limit(req.Limit).Offset(req.Page).Find(&datas).Error
+	if err != nil {
+		return nil, err
+	}
+	return datas, err
 }
 
 func (r repository) getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
