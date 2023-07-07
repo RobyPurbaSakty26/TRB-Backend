@@ -444,6 +444,7 @@ func (c controller) getAllUser(page, limit string) (*response.PaginateUserRespon
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
 	count, err := c.useCase.TotalDataUser()
+
 	if err != nil {
 		return nil, errors.New("cannot get total data master")
 	}
