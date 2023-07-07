@@ -55,7 +55,7 @@ func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 
 func (r repository) TotalDataUser() (int64, error) {
 	var count int64
-	err := r.db.Table("users").Count(&count).Error
+	err := r.db.Table("users").Where("deleted_at IS NULL").Count(&count).Error
 	if err != nil {
 		return 0, err
 	}
