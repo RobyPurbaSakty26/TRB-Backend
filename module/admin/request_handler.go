@@ -192,10 +192,30 @@ func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 	to := c.Query("end_date")
 	accNo := c.Query("giro_number")
 	accType := c.Query("type_account")
+	page := c.Query("page")
+	limit := c.Query("limit")
+
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	limit_int, err := strconv.Atoi(limit)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	page_int, err := strconv.Atoi(page)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 
 	if accType != "virtual_account" {
 
-		res, err := h.ctrl.findGiroBydate(accNo, from, to)
+		res, err := h.ctrl.findGiroBydatePagination(accNo, from, to, page_int, limit_int)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 			return
@@ -204,7 +224,7 @@ func (h requestAdminHandler) GetTransactionByDate(c *gin.Context) {
 		return
 	}
 
-	res, err := h.ctrl.findVirtualAccountByByDate(accNo, from, to)
+	res, err := h.ctrl.findVaBydatePagination(accNo, from, to, page_int, limit_int)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
 		return
