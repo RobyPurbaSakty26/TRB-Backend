@@ -50,10 +50,10 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 }
 
 func (u useCase) TotalDataUser() (int64, error) {
-	return u.repo.TotalDataMaster()
+	return u.repo.TotalDataUser()
 }
 func (u useCase) TotalDataRole() (int64, error) {
-	return u.repo.TotalDataMaster()
+	return u.repo.TotalDataRole()
 }
 func (u useCase) TotalDataMaster() (int64, error) {
 	return u.repo.TotalDataMaster()
