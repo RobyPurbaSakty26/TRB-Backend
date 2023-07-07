@@ -306,6 +306,49 @@ func Test_repository_getAllTransaction(t *testing.T) {
 	}
 }
 
+func Test_repository_assignRole(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		roleId uint
+		userId string
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		roleId: 1,
+		userId: "1",
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE users SET role_id = 1 WHERE id = 1")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.assignRole(tt.args.roleId, tt.args.userId); (err != nil) != tt.wantErr {
+				t.Errorf("assignRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
 func Test_repository_getAllRoles(t *testing.T) {
 	type fields struct {
 		db *gorm.DB
@@ -392,14 +435,14 @@ func Test_repository_createRole(t *testing.T) {
 	var tests []testCase
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
-	r := &entity.Role{
+	r := entity.Role{
 		Name: "admin",
 	}
 	a := args{
-		req: r,
+		req: &r,
 	}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("INSERT INTO `roles` (name) values (admin)")
+	query := regexp.QuoteMeta("INSERT INTO `roles` (name) values ('admin')")
 	err := errors.New("e")
 	mockQuery.ExpectQuery(query).WillReturnError(err)
 	tests = append(tests, testCase{
@@ -407,18 +450,6 @@ func Test_repository_createRole(t *testing.T) {
 		fields:  f,
 		args:    a,
 		wantErr: true,
-	})
-
-	name = "success"
-	mockQuery.ExpectQuery(query).WillReturnRows(
-		sqlmock.NewRows([]string{"name"}).
-			AddRow("admin"),
-	)
-	tests = append(tests, testCase{
-		name:    name,
-		fields:  f,
-		args:    a,
-		wantErr: false,
 	})
 
 	for _, tt := range tests {
@@ -440,14 +471,34 @@ func Test_repository_createAccess(t *testing.T) {
 	type args struct {
 		access *entity.Access
 	}
-	tests := []struct {
+	type testCase struct {
 		name    string
 		fields  fields
 		args    args
 		wantErr bool
-	}{
-		// TODO: Add test cases.
 	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &entity.Access{
+		RoleId:   1,
+		Resource: "user",
+		CanRead:  false,
+		CanWrite: false,
+	}
+	a := args{
+		access: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("INSERT INTO `accesses` (role_id, resource, can_read, can_write) values (1,'user',false,false)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			r := repository{
@@ -455,6 +506,232 @@ func Test_repository_createAccess(t *testing.T) {
 			}
 			if err := r.createAccess(tt.args.access); (err != nil) != tt.wantErr {
 				t.Errorf("createAccess() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_getAllUser(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		offset int
+		limit  int
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.User
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		offset: 1,
+		limit:  1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `users` WHERE `users`.`deleted_at` IS NULL LIMIT 1 OFFSET 1")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.User{
+		{
+			Fullname: "test",
+			Username: "test",
+			Email:    "test@gmail.com",
+			Password: "Test123@",
+			RoleId:   1,
+			Active:   false,
+			Role: entity.Role{
+				Model: gorm.Model{
+					ID: 1,
+				},
+				Name: "test",
+			},
+			InputFalse: 0,
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"fullname", "username", "email", "password", "role_id", "active", "input_false"}).
+			AddRow("test", "test", "test@gmail.com", "Test123@", 1, false, 0),
+	)
+	queryRole := regexp.QuoteMeta("SELECT * FROM `roles` WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL")
+	mockQuery.ExpectQuery(queryRole).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "name"}).
+			AddRow("1", "test"),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getAllUser(tt.args.offset, tt.args.limit)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getAllUser() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getAllUser() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getRoleById(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id string
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    *entity.Role
+		wantErr bool
+	}
+	var tests []testCase
+
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		id: "1",
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `roles` WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL ORDER BY `roles`.`id` LIMIT 1")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+
+	name = "success"
+	res := &entity.Role{
+		Model: gorm.Model{
+			ID: 1,
+		},
+		Name: "test",
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "name"}).
+			AddRow("1", "test"),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getRoleById(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getRoleById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getRoleById() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getAllAccessByRoleId(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id string
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.Access
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		id: "1",
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `accesses` WHERE role_id = ? AND `accesses`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.Access{
+		{
+			RoleId:   1,
+			Resource: "Monitoring",
+			CanRead:  false,
+			CanWrite: false,
+		},
+		{
+			RoleId:   1,
+			Resource: "Download",
+			CanRead:  false,
+			CanWrite: false,
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"role_id", "resource", "can_read", "can_write"}).
+			AddRow("1", "Monitoring", false, false).AddRow("1", "Download", false, false),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getAllAccessByRoleId(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getAllAccessByRoleId() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getAllAccessByRoleId() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
