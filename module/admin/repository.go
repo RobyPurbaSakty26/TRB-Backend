@@ -64,6 +64,7 @@ func (r repository) TotalDataUser() (int64, error) {
 func (r repository) TotalDataRole() (int64, error) {
 	var count int64
 	err := r.db.Table("roles").Where("deleted_at is NULL").Count(&count).Error
+
 	if err != nil {
 		return 0, err
 	}
