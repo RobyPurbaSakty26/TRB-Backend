@@ -323,18 +323,18 @@ func Test_repository_assignRole(t *testing.T) {
 	var tests []testCase
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
-	a := args{
-		roleId: 1,
-		userId: "1",
-	}
+	//a := args{
+	//	roleId: 1,
+	//	userId: "1",
+	//}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("UPDATE users SET role_id = 1 WHERE id = 1")
+	query := regexp.QuoteMeta("UPDATE `users` SET `role_id`=?,`updated_at`=? WHERE id = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("e")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(0, time.Time{}, "").WillReturnError(err)
 	tests = append(tests, testCase{
-		name:    name,
-		fields:  f,
-		args:    a,
+		name:   name,
+		fields: f,
+		//args:    a,
 		wantErr: true,
 	})
 	for _, tt := range tests {
@@ -442,9 +442,9 @@ func Test_repository_createRole(t *testing.T) {
 		req: &r,
 	}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("INSERT INTO `roles` (name) values ('admin')")
+	query := regexp.QuoteMeta("INSERT INTO `roles` (`created_at`,`updated_at`,`deleted_at`,`name`) VALUES (?,?,?,?)")
 	err := errors.New("e")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(time.Time{}, time.Time{}, nil, "admin").WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    name,
 		fields:  f,
@@ -490,9 +490,10 @@ func Test_repository_createAccess(t *testing.T) {
 		access: r,
 	}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("INSERT INTO `accesses` (role_id, resource, can_read, can_write) values (1,'user',false,false)")
+	query := regexp.QuoteMeta("INSERT INTO `accesses` (`created_at`,`updated_at`,`deleted_at`,`role_id`,`resource`,`can_read`,`can_write`) VALUES (?,?,?,?,?,?,?)")
 	err := errors.New("e")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).
+		WithArgs(time.Time{}, time.Time{}, nil, 1, "user", false, false).WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    name,
 		fields:  f,
@@ -732,6 +733,190 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("getAllAccessByRoleId() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_updateRole(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		role *entity.Role
+		id   uint
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &entity.Role{
+		Name: "test1",
+	}
+	a := args{
+		role: r,
+		id:   1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `roles` SET `name`=?,`updated_at`=? WHERE id = ? AND `roles`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs("test1", time.Time{}, 1).WillReturnError(err)
+
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.updateRole(tt.args.role, tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("updateRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_updateAccess(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		request *entity.Access
+		id      uint
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &entity.Access{
+		RoleId:   1,
+		Resource: "user",
+		CanRead:  false,
+		CanWrite: false,
+	}
+	a := args{
+		request: r,
+		id:      1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `accesses` SET `can_read`=?,`can_write`=?,`updated_at`=? WHERE `accesses`.`role_id` = ? AND `accesses`.`resource` = ? AND `accesses`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs(false, false, time.Time{}, 1, "user").WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.updateAccess(tt.args.request, tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("updateAccess() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_deleteAccess(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id uint
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		id: 1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `accesses` SET `deleted_at`=? WHERE role_id = ? AND `accesses`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs(time.Time{}, 1).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.deleteAccess(tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("deleteAccess() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_deleteRole(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id string
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		id: "1",
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `roles` SET `deleted_at`=? WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs(time.Time{}, "1").WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.deleteRole(tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("deleteRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
