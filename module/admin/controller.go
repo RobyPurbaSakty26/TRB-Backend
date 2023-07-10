@@ -49,7 +49,6 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 
-
 func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
 	// transform request
 	offset := (page - 1) * limit
