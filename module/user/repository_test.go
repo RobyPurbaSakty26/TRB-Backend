@@ -489,3 +489,60 @@ func Test_repository_updateInputFalse(t *testing.T) {
 		})
 	}
 }
+
+func Test_repository_updateStatusIsActive(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		user     *entity.User
+		isActive bool
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	r := args{
+		user: &entity.User{
+			Model:      gorm.Model{},
+			Fullname:   "",
+			Username:   "",
+			Email:      "",
+			Password:   "",
+			RoleId:     0,
+			Active:     false,
+			Role:       entity.Role{},
+			InputFalse: 0,
+		},
+		isActive: true,
+	}
+
+	f := fields{
+		db: mockDb,
+	}
+	query := regexp.QuoteMeta("UPDATE `users` SET `active`=?,`updated_at`=? WHERE email = ? AND `users`.`deleted_at` IS NULL")
+	err := errors.New("err")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    "Fail",
+		fields:  f,
+		args:    r,
+		wantErr: true,
+	})
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.updateStatusIsActive(tt.args.user, tt.args.isActive); (err != nil) != tt.wantErr {
+				t.Errorf("updateStatusIsActive() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
