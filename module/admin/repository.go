@@ -240,13 +240,5 @@ func (r repository) getById(id uint) (*entity.User, error) {
 
 func (r *repository) deleteUser(id uint) error {
 	var user entity.User
-	if err := r.db.First(&user, id).Error; err != nil {
-		return err
-	}
-
-	if err := r.db.Delete(&user).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return r.db.Delete(&user, id).Error
 }

@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 	"trb-backend/module/entity"
+	"trb-backend/module/web/request"
 	"trb-backend/test"
 )
 
@@ -166,6 +167,440 @@ func Test_repository_TotalDataMaster(t *testing.T) {
 			}
 			if got != tt.want {
 				t.Errorf("TotalDataMaster() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_TotalDataTransactionGiro(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    int64
+		wantErr bool
+	}
+	var tests []testCase
+
+	r := &request.FillterTransactionByDate{
+		AccNo:     "1",
+		StartDate: "",
+		EndDate:   "",
+	}
+	a := args{
+		req: r,
+	}
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT count(*) FROM `transaction_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    0,
+		wantErr: true,
+	})
+
+	name = "success"
+	var count int64 = 20
+	mockQuery.ExpectQuery(query).
+		WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(20))
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    count,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.TotalDataTransactionGiro(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TotalDataTransactionGiro() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TotalDataTransactionGiro() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_TotalDataTransactionVa(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    int64
+		wantErr bool
+	}
+	var tests []testCase
+
+	r := &request.FillterTransactionByDate{
+		AccNo:     "1",
+		StartDate: "",
+		EndDate:   "",
+	}
+	a := args{
+		req: r,
+	}
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT count(*) FROM `transaction_virtual_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    0,
+		wantErr: true,
+	})
+
+	name = "success"
+	var count int64 = 20
+	mockQuery.ExpectQuery(query).
+		WillReturnRows(sqlmock.NewRows([]string{"count(*)"}).AddRow(count))
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    count,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.TotalDataTransactionVa(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("TotalDataTransactionVa() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if got != tt.want {
+				t.Errorf("TotalDataTransactionVa() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getGiroByDatePagination(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.TransactionAccount
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &request.FillterTransactionByDate{}
+	a := args{
+		req: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `transaction_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?) LIMIT 0")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    nil,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.TransactionAccount{
+		{
+			Id:              1,
+			AccountNo:       "1",
+			Currency:        "IDR",
+			TransactionDate: time.Time{},
+			TransactionTime: nil,
+			Remark:          "",
+			TellerId:        0,
+			Category:        "",
+			Amount:          "",
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "account_no", "currency", "transaction_date", "transaction_time", "remark", "teller_id", "category", "amount"}).
+			AddRow(1, "1", "IDR", time.Time{}, nil, "", 0, "", ""),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getGiroByDatePagination(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getGiroByDatePagination() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getGiroByDatePagination() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getVaByDatePagination(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.TransactionVirtualAccount
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &request.FillterTransactionByDate{}
+	a := args{
+		req: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `transaction_virtual_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?) LIMIT 0")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    nil,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.TransactionVirtualAccount{
+		{
+			Id:               1,
+			AccountNo:        "1",
+			VirtualAccountNo: "",
+			Currency:         "IDR",
+			TransactionDate:  time.Time{},
+			TransactionTime:  nil,
+			Remark:           "",
+			TellerId:         0,
+			Category:         "",
+			Credit:           "",
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "account_no", "virtual_account_no", "currency", "transaction_date", "transaction_time", "remark", "teller_id", "category", "amount"}).
+			AddRow(1, "1", "", "IDR", time.Time{}, nil, "", 0, "", ""),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getVaByDatePagination(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getVaByDatePagination() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getVaByDatePagination() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getGiroByDate(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.TransactionAccount
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &request.FillterTransactionByDate{}
+	a := args{
+		req: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `transaction_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    nil,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.TransactionAccount{
+		{
+			Id:              1,
+			AccountNo:       "1",
+			Currency:        "IDR",
+			TransactionDate: time.Time{},
+			TransactionTime: nil,
+			Remark:          "",
+			TellerId:        0,
+			Category:        "",
+			Amount:          "",
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "account_no", "currency", "transaction_date", "transaction_time", "remark", "teller_id", "category", "amount"}).
+			AddRow(1, "1", "IDR", time.Time{}, nil, "", 0, "", ""),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getGiroByDate(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getGiroByDate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getGiroByDate() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_getVirtualAccountByDate(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		req *request.FillterTransactionByDate
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    []entity.TransactionVirtualAccount
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &request.FillterTransactionByDate{}
+	a := args{
+		req: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `transaction_virtual_account` WHERE account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    nil,
+		wantErr: true,
+	})
+	name = "success"
+	res := []entity.TransactionVirtualAccount{
+		{
+			Id:               1,
+			AccountNo:        "1",
+			VirtualAccountNo: "",
+			Currency:         "IDR",
+			TransactionDate:  time.Time{},
+			TransactionTime:  nil,
+			Remark:           "",
+			TellerId:         0,
+			Category:         "",
+			Credit:           "",
+		},
+	}
+
+	mockQuery.ExpectQuery(query).WillReturnRows(
+		sqlmock.NewRows([]string{"id", "account_no", "virtual_account_no", "currency", "transaction_date", "transaction_time", "remark", "teller_id", "category", "amount"}).
+			AddRow(1, "1", "", "IDR", time.Time{}, nil, "", 0, "", ""),
+	)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    res,
+		wantErr: false,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getVirtualAccountByDate(tt.args.req)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getVirtualAccountByDate() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getVirtualAccountByDate() got = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -917,6 +1352,148 @@ func Test_repository_deleteRole(t *testing.T) {
 			}
 			if err := r.deleteRole(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("deleteRole() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_userApprove(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		user *entity.User
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	r := &entity.User{
+		Model: gorm.Model{
+			ID: 1,
+		},
+		Active:     true,
+		InputFalse: 0,
+	}
+	a := args{
+		user: r,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `users` SET `active`=?,`input_false`=?,`updated_at`=? WHERE `users`.`deleted_at` IS NULL AND `id` = ?")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs(true, 0, time.Time{}, 1).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			if err := r.userApprove(tt.args.user); (err != nil) != tt.wantErr {
+				t.Errorf("userApprove() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_repository_getById(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id uint
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		want    *entity.User
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+
+	a := args{
+		id: 1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("SELECT * FROM `users` WHERE `users`.`id` = ? AND `users`.`deleted_at` IS NULL ORDER BY `users`.`id` LIMIT 1")
+	err := errors.New("e")
+	mockQuery.ExpectQuery(query).WillReturnError(err)
+	r := &entity.User{}
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		want:    r,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := repository{
+				db: tt.fields.db,
+			}
+			got, err := r.getById(tt.args.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("getById() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("getById() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_repository_deleteUser1(t *testing.T) {
+	type fields struct {
+		db *gorm.DB
+	}
+	type args struct {
+		id uint
+	}
+	type testCase struct {
+		name    string
+		fields  fields
+		args    args
+		wantErr bool
+	}
+	var tests []testCase
+	mockQuery, mockDb := test.NewMockQueryDB(t)
+	name := "error"
+	a := args{
+		id: 1,
+	}
+	f := fields{db: mockDb}
+	query := regexp.QuoteMeta("UPDATE `users` SET `deleted_at`=? WHERE id = ? AND `accesses`.`deleted_at` IS NULL")
+	err := errors.New("e")
+	mockQuery.ExpectExec(query).
+		WithArgs(time.Time{}, 1).WillReturnError(err)
+	tests = append(tests, testCase{
+		name:    name,
+		fields:  f,
+		args:    a,
+		wantErr: true,
+	})
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &repository{
+				db: tt.fields.db,
+			}
+			if err := r.deleteUser(tt.args.id); (err != nil) != tt.wantErr {
+				t.Errorf("deleteUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
 	}
