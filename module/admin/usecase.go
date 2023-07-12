@@ -45,12 +45,32 @@ type UseCaseAdminInterface interface {
 	findVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
 	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
+	totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error)
+	totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error)
+	getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error)
+	getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	return useCase{
 		repo: repo,
 	}
+}
+
+func (u useCase) getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error) {
+	return u.repo.getUserByEmail(req)
+}
+
+func (u useCase) getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error) {
+	return u.repo.getUserByUsername(req)
+}
+
+func (u useCase) totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error) {
+	return u.repo.totalGetUserByEmail(req)
+}
+
+func (u useCase) totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error) {
+	return u.repo.totalGetUserByUsername(req)
 }
 
 func (u useCase) TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error) {

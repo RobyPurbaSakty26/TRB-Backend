@@ -45,6 +45,8 @@ type RequestHandlerAdminInterface interface {
 	DownloadTransaction(c *gin.Context)
 	GetTransactionByDate(c *gin.Context)
 	DownloadTransactionByDate(c *gin.Context)
+	GetUserByEmail(c *gin.Context)
+	GetUserByUsername(c *gin.Context)
 }
 
 func NewRequestAdminHandler(ctrl ControllerAdminInterface) RequestHandlerAdminInterface {
@@ -59,6 +61,70 @@ func DefaultRequestAdminHandler(db *gorm.DB) RequestHandlerAdminInterface {
 			),
 		),
 	)
+}
+
+func (h requestAdminHandler) GetUserByEmail(c *gin.Context) {
+	email := c.Query("Email")
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	limit_int, err := strconv.Atoi(limit)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	page_int, err := strconv.Atoi(page)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	res, err := h.ctrl.getUserByEmail(email, page_int, limit_int)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
+}
+
+func (h requestAdminHandler) GetUserByUsername(c *gin.Context) {
+	username := c.Query("Username")
+	page := c.Query("Page")
+	limit := c.Query("Limit")
+
+	if page == "" {
+		page = "1"
+	}
+	if limit == "" {
+		limit = "10"
+	}
+
+	limit_int, err := strconv.Atoi(limit)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+	page_int, err := strconv.Atoi(page)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
+
+	res, err := h.ctrl.getUserByUsername(username, page_int, limit_int)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, response.ErrorResponse{Status: "Fail", Message: err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, res)
 }
 
 func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {

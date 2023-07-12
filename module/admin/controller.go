@@ -41,6 +41,8 @@ type ControllerAdminInterface interface {
 	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
 	findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error)
 	findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error)
+	getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error)
+	getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
