@@ -63,10 +63,13 @@ func (c controller) getUserByEmail(email string, page, limit int) (*response.Pag
 		Page:  offset,
 		Limit: limit,
 	}
+	// get total
 	total, err := c.useCase.totalGetUserByEmail(&req)
 	if err != nil {
 		return nil, err
 	}
+
+	// get email
 	data, err := c.useCase.getUserByEmail(&req)
 	if err != nil {
 		return nil, err
