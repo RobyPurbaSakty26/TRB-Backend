@@ -103,7 +103,8 @@ func (r repository) TotalDataUser() (int64, error) {
 }
 func (r repository) TotalDataRole() (int64, error) {
 	var count int64
-	err := r.db.Table("roles").Where("deleted_at IS NULL").Count(&count).Error
+	err := r.db.Table("roles").Where("deleted_at is NULL").Count(&count).Error
+
 	if err != nil {
 		return 0, err
 	}
@@ -279,13 +280,5 @@ func (r repository) getById(id uint) (*entity.User, error) {
 
 func (r *repository) deleteUser(id uint) error {
 	var user entity.User
-	if err := r.db.First(&user, id).Error; err != nil {
-		return err
-	}
-
-	if err := r.db.Delete(&user).Error; err != nil {
-		return err
-	}
-
-	return nil
+	return r.db.Delete(&user, id).Error
 }

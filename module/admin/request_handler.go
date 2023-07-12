@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"reflect"
 	"strconv"
+	"time"
 	"trb-backend/helpers"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
@@ -136,9 +137,32 @@ func (h requestAdminHandler) DownloadTransaction(c *gin.Context) {
 		return
 	}
 
-	err = h.ctrl.downloadPageMonitoring(c, result.Data)
+	currentTime := time.Now()
+	c.Header("Content-Disposition", fmt.Sprintf("attachment;filename=data_%s.xlsx", currentTime.Format("02-Jan-2006")))
+	c.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+	f := excelize.NewFile()
+	f.SetCellValue("Sheet1", "A1", "NoRekeningGiro")
+	f.SetCellValue("Sheet1", "B1", "Currency")
+	f.SetCellValue("Sheet1", "C1", "Tanggal")
+	f.SetCellValue("Sheet1", "D1", "PosisiSaldoGiro")
+	f.SetCellValue("Sheet1", "E1", "JumlahNoVA")
+	f.SetCellValue("Sheet1", "F1", "PosisiSaldoVA")
+	f.SetCellValue("Sheet1", "G1", "Selisih")
+
+	for i, record := range result.Data {
+		row := i + 2
+		f.SetCellValue("Sheet1", fmt.Sprintf("A%d", row), record.NoRekeningGiro)
+		f.SetCellValue("Sheet1", fmt.Sprintf("B%d", row), record.Currency)
+		f.SetCellValue("Sheet1", fmt.Sprintf("C%d", row), record.Tanggal)
+		f.SetCellValue("Sheet1", fmt.Sprintf("D%d", row), record.PosisiSaldoGiro)
+		f.SetCellValue("Sheet1", fmt.Sprintf("E%d", row), record.JumlahNoVA)
+		f.SetCellValue("Sheet1", fmt.Sprintf("F%d", row), record.PosisiSaldoVA)
+		f.SetCellValue("Sheet1", fmt.Sprintf("G%d", row), record.Selisih)
+	}
+	err = f.Write(c.Writer)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: err.Error()})
+		c.JSON(http.StatusInternalServerError, response.ErrorResponse{Status: "Failed", Message: "Failed To export data to excel"})
 		return
 	}
 

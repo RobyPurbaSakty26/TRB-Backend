@@ -170,10 +170,5 @@ func (u useCase) deleteUser(id uint) error {
 	}
 
 	// Melakukan penghapusan pengguna dari repository
-	err = u.repo.deleteUser(id)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return u.repo.deleteUser(id)
 }

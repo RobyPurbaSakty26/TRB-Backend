@@ -2,7 +2,6 @@ package admin
 
 import (
 	"errors"
-	"fmt"
 	"log"
 	"math"
 	"strconv"
@@ -10,9 +9,6 @@ import (
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/module/web/response"
-
-	"github.com/gin-gonic/gin"
-	"github.com/xuri/excelize/v2"
 )
 
 /**
@@ -43,7 +39,6 @@ type ControllerAdminInterface interface {
 	findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error)
 	findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error)
 	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
-	downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error
 	findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error)
 	findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error)
 	getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error)
@@ -54,109 +49,6 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	return controller{
 		useCase: usecase,
 	}
-}
-
-func (c controller) getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error) {
-	offset := (page - 1) * limit
-	req := request.GetByEmailUserRequset{
-		Email: email,
-		Page:  offset,
-		Limit: limit,
-	}
-	total, err := c.useCase.totalGetUserByEmail(&req)
-	if err != nil {
-		return nil, err
-	}
-	data, err := c.useCase.getUserByEmail(&req)
-	if err != nil {
-		return nil, err
-	}
-	totalPage := float64(total) / float64(limit)
-	res := &response.PaginateUserResponse{
-		Page:       page,
-		Limit:      limit,
-		Total:      int(total),
-		TotalPages: math.Ceil(totalPage),
-	}
-	for _, item := range data {
-		res.Data = append(res.Data, response.ItemResponse{
-			ID:       item.ID,
-			Username: item.Username,
-			Fullname: item.Fullname,
-			Email:    item.Email,
-			IsActive: item.Active,
-			RoleId:   item.RoleId,
-			Role:     item.Role.Name,
-		})
-	}
-	return res, nil
-}
-
-func (c controller) getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error) {
-	offset := (page - 1) * limit
-	req := request.GetByUsernameUserRequset{
-		Username: username,
-		Page:     offset,
-		Limit:    limit,
-	}
-	total, err := c.useCase.totalGetUserByUsername(&req)
-	if err != nil {
-		return nil, err
-	}
-	data, err := c.useCase.getUserByUsername(&req)
-	if err != nil {
-		return nil, err
-	}
-	totalPage := float64(total) / float64(limit)
-	res := &response.PaginateUserResponse{
-		Page:       page,
-		Limit:      limit,
-		Total:      int(total),
-		TotalPages: math.Ceil(totalPage),
-	}
-	for _, item := range data {
-		res.Data = append(res.Data, response.ItemResponse{
-			ID:       item.ID,
-			Username: item.Username,
-			Fullname: item.Fullname,
-			Email:    item.Email,
-			IsActive: item.Active,
-			RoleId:   item.RoleId,
-			Role:     item.Role.Name,
-		})
-	}
-	return res, nil
-}
-
-func (c controller) downloadPageMonitoring(context *gin.Context, data []response.ItemMonitoring) error {
-	currentTime := time.Now()
-	context.Header("Content-Disposition", fmt.Sprintf("attachment;filename=data_%s.xlsx", currentTime.Format("02-Jan-2006")))
-	context.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-
-	f := excelize.NewFile()
-	f.SetCellValue("Sheet1", "A1", "NoRekeningGiro")
-	f.SetCellValue("Sheet1", "B1", "Currency")
-	f.SetCellValue("Sheet1", "C1", "Tanggal")
-	f.SetCellValue("Sheet1", "D1", "PosisiSaldoGiro")
-	f.SetCellValue("Sheet1", "E1", "JumlahNoVA")
-	f.SetCellValue("Sheet1", "F1", "PosisiSaldoVA")
-	f.SetCellValue("Sheet1", "G1", "Selisih")
-
-	for i, record := range data {
-		row := i + 2
-		f.SetCellValue("Sheet1", fmt.Sprintf("A%d", row), record.NoRekeningGiro)
-		f.SetCellValue("Sheet1", fmt.Sprintf("B%d", row), record.Currency)
-		f.SetCellValue("Sheet1", fmt.Sprintf("C%d", row), record.Tanggal)
-		f.SetCellValue("Sheet1", fmt.Sprintf("D%d", row), record.PosisiSaldoGiro)
-		f.SetCellValue("Sheet1", fmt.Sprintf("E%d", row), record.JumlahNoVA)
-		f.SetCellValue("Sheet1", fmt.Sprintf("F%d", row), record.PosisiSaldoVA)
-		f.SetCellValue("Sheet1", fmt.Sprintf("G%d", row), record.Selisih)
-	}
-	err := f.Write(context.Writer)
-	if err != nil {
-		return errors.New("Failed to export data to excel")
-	}
-	return nil
 }
 
 func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
