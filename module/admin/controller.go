@@ -51,6 +51,81 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 
+func (c controller) getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error) {
+	offset := (page - 1) * limit
+	req := request.GetByEmailUserRequset{
+		Email: email,
+		Page:  offset,
+		Limit: limit,
+	}
+	// get total
+	total, err := c.useCase.totalGetUserByEmail(&req)
+	if err != nil {
+		return nil, err
+	}
+
+	// get email
+	data, err := c.useCase.getUserByEmail(&req)
+	if err != nil {
+		return nil, err
+	}
+	totalPage := float64(total) / float64(limit)
+	res := &response.PaginateUserResponse{
+		Page:       page,
+		Limit:      limit,
+		Total:      int(total),
+		TotalPages: math.Ceil(totalPage),
+	}
+	for _, item := range data {
+		res.Data = append(res.Data, response.ItemResponse{
+			ID:       item.ID,
+			Username: item.Username,
+			Fullname: item.Fullname,
+			Email:    item.Email,
+			IsActive: item.Active,
+			RoleId:   item.RoleId,
+			Role:     item.Role.Name,
+		})
+	}
+	return res, nil
+}
+
+func (c controller) getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error) {
+	offset := (page - 1) * limit
+	req := request.GetByUsernameUserRequset{
+		Username: username,
+		Page:     offset,
+		Limit:    limit,
+	}
+	total, err := c.useCase.totalGetUserByUsername(&req)
+	if err != nil {
+		return nil, err
+	}
+	data, err := c.useCase.getUserByUsername(&req)
+	if err != nil {
+		return nil, err
+	}
+	totalPage := float64(total) / float64(limit)
+	res := &response.PaginateUserResponse{
+		Page:       page,
+		Limit:      limit,
+		Total:      int(total),
+		TotalPages: math.Ceil(totalPage),
+	}
+	for _, item := range data {
+		res.Data = append(res.Data, response.ItemResponse{
+			ID:       item.ID,
+			Username: item.Username,
+			Fullname: item.Fullname,
+			Email:    item.Email,
+			IsActive: item.Active,
+			RoleId:   item.RoleId,
+			Role:     item.Role.Name,
+		})
+	}
+	return res, nil
+}
+
 func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
 	// transform request
 	offset := (page - 1) * limit
