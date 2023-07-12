@@ -45,8 +45,8 @@ func SetupRouter() *gin.Engine {
 		users.PATCH("/forgot-password", userHandler.UpdatePassword)
 		secure := users.Use(middleware.AuthMiddleware)
 		{
-			secure.GET("/email", userHandler.GetByEmail)
-			secure.GET("/username", userHandler.GetByUsername)
+			// secure.GET("/email", userHandler.GetByEmail)
+			// secure.GET("/username", userHandler.GetByUsername)
 			secure.GET("/who-iam", userHandler.WhoIm)
 		}
 	}

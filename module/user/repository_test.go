@@ -417,7 +417,7 @@ func Test_repository_updatePassword(t *testing.T) {
 	}
 	query := regexp.QuoteMeta("UPDATE `users` SET `password`=?,`updated_at`=? WHERE email = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("error")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs("123", time.Time{}, "").WillReturnError(err)
 
 	tests = append(tests, testCase{
 		name:    "Fail",
@@ -470,7 +470,7 @@ func Test_repository_updateInputFalse(t *testing.T) {
 	}
 	query := regexp.QuoteMeta("UPDATE `users` SET `input_false`=?,`updated_at`=? WHERE email = ? AND `users`.`deleted_at` IS NULL AND `id` = ?")
 	err := errors.New("error")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(1, time.Time{}, "joe@mail.com", 1).WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    "Fail",
 		fields:  f,
@@ -508,17 +508,7 @@ func Test_repository_updateStatusIsActive(t *testing.T) {
 	var tests []testCase
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	r := args{
-		user: &entity.User{
-			Model:      gorm.Model{},
-			Fullname:   "",
-			Username:   "",
-			Email:      "",
-			Password:   "",
-			RoleId:     0,
-			Active:     false,
-			Role:       entity.Role{},
-			InputFalse: 0,
-		},
+		user:     &entity.User{},
 		isActive: true,
 	}
 
@@ -527,7 +517,7 @@ func Test_repository_updateStatusIsActive(t *testing.T) {
 	}
 	query := regexp.QuoteMeta("UPDATE `users` SET `active`=?,`updated_at`=? WHERE email = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("err")
-	mockQuery.ExpectQuery(query).WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(true, time.Time{}, "").WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    "Fail",
 		fields:  f,

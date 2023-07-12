@@ -30,8 +30,8 @@ type controller struct {
 
 type ControllerUserInterface interface {
 	create(req *request.UserCreateRequest) (*response.UserResponse, error)
-	getByEmail(email string) (*response.UserResponse, error)
-	getByUsername(username string) (*response.UserResponse, error)
+	// getByEmail(email string) (*response.UserResponse, error)
+	// getByUsername(username string) (*response.UserResponse, error)
 	login(req *request.LoginRequest) (*response.LoginResponse, *int, error)
 	updatePassword(req *request.UpdatePasswordRequest) (*response.UpdatePasswordResponse, error)
 	whoIm(id int) (*response.WhoImResponse, error)
@@ -129,46 +129,46 @@ func (c controller) create(req *request.UserCreateRequest) (*response.UserRespon
 	return result, nil
 }
 
-func (c controller) getByEmail(email string) (*response.UserResponse, error) {
-	data, err := c.useCase.getByEmail(email)
+// func (c controller) getByEmail(email string) (*response.UserResponse, error) {
+// 	data, err := c.useCase.getByEmail(email)
 
-	if err != nil {
-		return nil, err
-	}
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	res := &response.UserResponse{
-		Status: "Success",
-		Data: response.ItemResponse{
-			ID:       data.ID,
-			Username: data.Username,
-			Fullname: data.Fullname,
-			Email:    data.Email,
-		},
-	}
-	return res, nil
-}
+// 	res := &response.UserResponse{
+// 		Status: "Success",
+// 		Data: response.ItemResponse{
+// 			ID:       data.ID,
+// 			Username: data.Username,
+// 			Fullname: data.Fullname,
+// 			Email:    data.Email,
+// 		},
+// 	}
+// 	return res, nil
+// }
 
-func (c controller) getByUsername(username string) (*response.UserResponse, error) {
-	data, err := c.useCase.getByUsername(username)
+// func (c controller) getByUsername(username string) (*response.UserResponse, error) {
+// 	data, err := c.useCase.getByUsername(username)
 
-	if err != nil {
-		return nil, err
-	}
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	res := &response.UserResponse{
-		Status: "Success",
-		Data: response.ItemResponse{
-			ID:       data.ID,
-			Fullname: data.Fullname,
-			Username: data.Username,
-			Email:    data.Email,
-			IsActive: data.Active,
-			Role:     data.Role.Name,
-			RoleId:   data.RoleId,
-		},
-	}
-	return res, nil
-}
+// 	res := &response.UserResponse{
+// 		Status: "Success",
+// 		Data: response.ItemResponse{
+// 			ID:       data.ID,
+// 			Fullname: data.Fullname,
+// 			Username: data.Username,
+// 			Email:    data.Email,
+// 			IsActive: data.Active,
+// 			Role:     data.Role.Name,
+// 			RoleId:   data.RoleId,
+// 		},
+// 	}
+// 	return res, nil
+// }
 
 func isThreeHours(update time.Time) float64 {
 	lastUpdate := update
@@ -260,11 +260,11 @@ func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*respons
 	data, err := c.useCase.getByEmail(req.Email)
 	pass := helpers.ValidatePass(req.Password)
 	if !pass {
-		return nil, errors.New("Please choose a stronger password. Try a mix of letters, numbers, and symbols")
+		return nil, errors.New("please choose a stronger password. Try a mix of letters, numbers, and symbols")
 	}
 
-	if err != nil {
-		return nil, err
+	if err != nil || req.Username != data.Username {
+		return nil, errors.New("user not found")
 	}
 
 	user := &entity.User{

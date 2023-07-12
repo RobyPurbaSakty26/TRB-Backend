@@ -47,10 +47,50 @@ type AdminRepositoryInterface interface {
 	getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
 	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
+	getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error)
+	totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error)
+	totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error)
+	getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error)
 }
 
 func NewAdminRepository(db *gorm.DB) AdminRepositoryInterface {
 	return &repository{db: db}
+}
+
+func (r repository) totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error) {
+	var count int64
+	err := r.db.Table("users").Where("username LIKE ? AND deleted_at IS NULL", "%"+req.Username+"%").Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r repository) totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error) {
+	var count int64
+	err := r.db.Table("users").Where("email LIKE ? AND deleted_at IS NULL", "%"+req.Email+"%").Count(&count).Error
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+func (r repository) getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error) {
+	var users []entity.User
+	err := r.db.Where("username LIKE ?", "%"+req.Username+"%").Limit(req.Limit).Offset(req.Page).Preload("Role").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
+}
+
+func (r repository) getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error) {
+	var users []entity.User
+	err := r.db.Where("email LIKE ? ", "%"+req.Email+"%").Limit(req.Limit).Offset(req.Page).Preload("Role").Find(&users).Error
+	if err != nil {
+		return nil, err
+	}
+	return users, nil
 }
 
 func (r repository) TotalDataUser() (int64, error) {
