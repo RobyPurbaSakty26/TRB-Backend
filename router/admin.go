@@ -39,6 +39,10 @@ func AdminRoutes(r *gin.Engine, db *gorm.DB) {
 	{
 		userAccess.GET("/users", middleware.AccessMiddleware("User", "read", db),
 			adminHandler.GetAllUsers)
+		userAccess.GET("/users/get-by-email", middleware.AccessMiddleware("User", "read", db),
+			adminHandler.GetUserByEmail)
+		userAccess.GET("/users/get-by-username", middleware.AccessMiddleware("User", "read", db),
+			adminHandler.GetUserByUsername)
 		writeUser := userAccess.Use(middleware.AccessMiddleware("User", "write", db))
 		{
 			writeUser.PATCH("/active/:userId", adminHandler.UserApprove)
