@@ -22,29 +22,29 @@ type repository struct {
 }
 
 type AdminRepositoryInterface interface {
-	getAllUser(offset, limit int) ([]entity.User, error)
-	getAllRoles(offset, limit int) ([]entity.Role, error)
-	getAllAccessByRoleId(id string) ([]entity.Access, error)
-	getRoleById(id string) (*entity.Role, error)
-	updateAccess(request *entity.Access, id uint) error
-	updateRole(role *entity.Role, id uint) error
-	userApprove(user *entity.User) error
-	getById(id uint) (*entity.User, error)
-	deleteUser(id uint) error
-	createRole(req *entity.Role) error
-	createAccess(access *entity.Access) error
-	deleteRole(id string) error
-	deleteAccess(id uint) error
-	assignRole(roleId uint, userId string) error
-	getAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
-	getListAccess() ([]string, error)
-	getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
-	getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	GetAllUser(offset, limit int) ([]entity.User, error)
+	GetAllRoles(offset, limit int) ([]entity.Role, error)
+	GetAllAccessByRoleId(id string) ([]entity.Access, error)
+	GetRoleById(id string) (*entity.Role, error)
+	UpdateAccess(request *entity.Access, id uint) error
+	UpdateRole(role *entity.Role, id uint) error
+	UserApprove(user *entity.User) error
+	GetById(id uint) (*entity.User, error)
+	DeleteUser(id uint) error
+	CreateRole(req *entity.Role) error
+	CreateAccess(access *entity.Access) error
+	DeleteRole(id string) error
+	DeleteAccess(id uint) error
+	AssignRole(roleId uint, userId string) error
+	GetAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
+	GetListAccess() ([]string, error)
+	GetVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	GetGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
-	getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
-	getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
+	GetGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	GetVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
 	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
 }
@@ -97,7 +97,7 @@ func (r repository) TotalDataTransactionVa(req *request.FillterTransactionByDate
 	return count, nil
 }
 
-func (r repository) getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+func (r repository) GetGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
 	var datas []entity.TransactionAccount
 	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Limit(req.Limit).Offset(req.Page).Find(&datas).Error
 	if err != nil {
@@ -106,7 +106,7 @@ func (r repository) getGiroByDatePagination(req *request.FillterTransactionByDat
 	return datas, err
 }
 
-func (r repository) getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+func (r repository) GetVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
 	var datas []entity.TransactionVirtualAccount
 	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Limit(req.Limit).Offset(req.Page).Find(&datas).Error
 	if err != nil {
@@ -115,7 +115,7 @@ func (r repository) getVaByDatePagination(req *request.FillterTransactionByDate)
 	return datas, err
 }
 
-func (r repository) getGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+func (r repository) GetGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
 	var datas []entity.TransactionAccount
 	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Find(&datas).Error
 	if err != nil {
@@ -124,7 +124,7 @@ func (r repository) getGiroByDate(req *request.FillterTransactionByDate) ([]enti
 	return datas, err
 }
 
-func (r repository) getVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
+func (r repository) GetVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
 	var datas []entity.TransactionVirtualAccount
 	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Find(&datas).Error
 	if err != nil {
@@ -133,7 +133,7 @@ func (r repository) getVirtualAccountByDate(req *request.FillterTransactionByDat
 	return datas, nil
 }
 
-func (r repository) getListAccess() ([]string, error) {
+func (r repository) GetListAccess() ([]string, error) {
 	var names []string
 	var access entity.Access
 	err := r.db.Model(&access).Select("DISTINCT resource").Find(&names).Error
@@ -142,7 +142,7 @@ func (r repository) getListAccess() ([]string, error) {
 	}
 	return names, nil
 }
-func (r repository) getAllTransaction(offset, limit int) ([]entity.MasterAccount, error) {
+func (r repository) GetAllTransaction(offset, limit int) ([]entity.MasterAccount, error) {
 	var datas []entity.MasterAccount
 	err := r.db.Limit(limit).Offset(offset).Find(&datas).Error
 
@@ -152,13 +152,13 @@ func (r repository) getAllTransaction(offset, limit int) ([]entity.MasterAccount
 	return datas, nil
 }
 
-func (r repository) assignRole(roleId uint, userId string) error {
+func (r repository) AssignRole(roleId uint, userId string) error {
 	var user entity.User
 	return r.db.Model(&user).
 		Where("id = ?", userId).
 		Update("role_id", roleId).Error
 }
-func (r repository) getAllRoles(offset, limit int) ([]entity.Role, error) {
+func (r repository) GetAllRoles(offset, limit int) ([]entity.Role, error) {
 	var roles []entity.Role
 	err := r.db.Limit(limit).Offset(offset).Find(&roles).Error
 	if err != nil {
@@ -166,15 +166,15 @@ func (r repository) getAllRoles(offset, limit int) ([]entity.Role, error) {
 	}
 	return roles, nil
 }
-func (r repository) createRole(req *entity.Role) error {
+func (r repository) CreateRole(req *entity.Role) error {
 	return r.db.Create(req).Error
 }
 
-func (r repository) createAccess(access *entity.Access) error {
+func (r repository) CreateAccess(access *entity.Access) error {
 	return r.db.Create(access).Error
 }
 
-func (r repository) getAllUser(offset, limit int) ([]entity.User, error) {
+func (r repository) GetAllUser(offset, limit int) ([]entity.User, error) {
 	var user []entity.User
 	err := r.db.Offset(offset).Limit(limit).Preload("Role").Find(&user).Error
 	if err != nil {
@@ -183,7 +183,7 @@ func (r repository) getAllUser(offset, limit int) ([]entity.User, error) {
 	return user, nil
 }
 
-func (r repository) getRoleById(id string) (*entity.Role, error) {
+func (r repository) GetRoleById(id string) (*entity.Role, error) {
 	var role entity.Role
 	err := r.db.First(&role, id).Error
 	if err != nil {
@@ -191,7 +191,7 @@ func (r repository) getRoleById(id string) (*entity.Role, error) {
 	}
 	return &role, nil
 }
-func (r repository) getAllAccessByRoleId(id string) ([]entity.Access, error) {
+func (r repository) GetAllAccessByRoleId(id string) ([]entity.Access, error) {
 	var access []entity.Access
 	err := r.db.Find(&access, "role_id = ?", id).Error
 	if err != nil {
@@ -199,12 +199,12 @@ func (r repository) getAllAccessByRoleId(id string) ([]entity.Access, error) {
 	}
 	return access, nil
 }
-func (r repository) updateRole(role *entity.Role, id uint) error {
+func (r repository) UpdateRole(role *entity.Role, id uint) error {
 	return r.db.Model(role).
 		Where("id = ?", id).
 		Update("name", role.Name).Error
 }
-func (r repository) updateAccess(request *entity.Access, id uint) error {
+func (r repository) UpdateAccess(request *entity.Access, id uint) error {
 	return r.db.Model(request).
 		Where(entity.Access{Resource: request.Resource, RoleId: id}).
 		Updates(map[string]interface{}{
@@ -213,16 +213,16 @@ func (r repository) updateAccess(request *entity.Access, id uint) error {
 		}).Error
 }
 
-func (r repository) deleteAccess(id uint) error {
+func (r repository) DeleteAccess(id uint) error {
 	var access entity.Access
 	return r.db.Delete(&access, "role_id = ?", id).Error
 }
 
-func (r repository) deleteRole(id string) error {
+func (r repository) DeleteRole(id string) error {
 	var role entity.Role
 	return r.db.Delete(&role, id).Error
 }
-func (r repository) userApprove(user *entity.User) error {
+func (r repository) UserApprove(user *entity.User) error {
 
 	return r.db.Model(&user).Updates(map[string]interface{}{
 		"InputFalse": 0,
@@ -230,7 +230,7 @@ func (r repository) userApprove(user *entity.User) error {
 	}).Error
 }
 
-func (r repository) getById(id uint) (*entity.User, error) {
+func (r repository) GetById(id uint) (*entity.User, error) {
 	var user entity.User
 	err := r.db.First(&user, id).Error
 
@@ -238,7 +238,7 @@ func (r repository) getById(id uint) (*entity.User, error) {
 
 }
 
-func (r *repository) deleteUser(id uint) error {
+func (r *repository) DeleteUser(id uint) error {
 	var user entity.User
 	return r.db.Delete(&user, id).Error
 }
