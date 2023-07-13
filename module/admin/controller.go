@@ -265,7 +265,7 @@ func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string)
 func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 	res, err := c.useCase.GetListAccess()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Data list access not found")
 	}
 
 	result := response.ResponseAccessName{
@@ -282,10 +282,9 @@ func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 func (c controller) getAllTransaction(page, limit string) (*response.PaginateMonitoring, error) {
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
-	count, err := c.useCase.TotalDataMaster()
-	if err != nil {
-		return nil, errors.New("cannot get total data master")
-	}
+
+	offset := (pageInt - 1) * limitInt
+	datas, count, err := c.useCase.GetAllTransaction(offset, limitInt)
 	countInt := int(count)
 
 	totalPage := float64(countInt) / float64(limitInt)
@@ -296,8 +295,6 @@ func (c controller) getAllTransaction(page, limit string) (*response.PaginateMon
 		TotalPages: math.Ceil(totalPage),
 	}
 
-	offset := (pageInt - 1) * limitInt
-	datas, err := c.useCase.GetAllTransaction(offset, limitInt)
 	if err != nil {
 		return nil, err
 	}
@@ -327,12 +324,7 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	}
 	idUser := uint(idUserUint64)
 
-	_, err = c.useCase.GetById(idUser)
-	if err != nil {
-		return err
-	}
-
-	err = c.useCase.AssignRole(roleId, id)
+	err = c.useCase.AssignRole(roleId, idUser)
 	if err != nil {
 		return err
 	}
@@ -342,12 +334,12 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 func (c controller) getAllRole(page, limit string) (*response.PaginateRole, error) {
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
-	count, err := c.useCase.TotalDataRole()
+	offset := (pageInt - 1) * limitInt
+	roles, count, err := c.useCase.GetAllRoles(offset, limitInt)
 	if err != nil {
-		return nil, errors.New("cannot get total data master")
+		return nil, errors.New("Cannot get all data roles")
 	}
 	countInt := int(count)
-
 	totalPage := float64(countInt) / float64(limitInt)
 	result := response.PaginateRole{
 		Page:       pageInt,
@@ -355,19 +347,13 @@ func (c controller) getAllRole(page, limit string) (*response.PaginateRole, erro
 		Total:      countInt,
 		TotalPages: math.Ceil(totalPage),
 	}
-	offset := (pageInt - 1) * limitInt
-	roles, err := c.useCase.GetAllRoles(offset, limitInt)
-	if err != nil {
-		return nil, errors.New("Cannot get all data roles")
-	}
 
 	for _, role := range roles {
 		item := response.ItemRole{
 			Id:   role.ID,
 			Name: role.Name,
 		}
-		idStr := strconv.FormatUint(uint64(role.ID), 10)
-		itemAccess, _ := c.useCase.GetAllAccessByRoleId(idStr)
+		itemAccess, _ := c.useCase.GetAllAccessByRoleId(role.ID)
 		for _, data := range itemAccess {
 			temp := response.AccessItem{
 				Resource: data.Resource,
@@ -443,7 +429,12 @@ func (c controller) getAllUser(page, limit string) (*response.PaginateUserRespon
 }
 
 func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, error) {
-	data, err := c.useCase.GetRoleById(id)
+	idUint64, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return nil, errors.New("cannot parse id string to uint64")
+	}
+	idUint := uint(idUint64)
+	data, err := c.useCase.GetRoleById(idUint)
 
 	result := &response.RoleUserResponse{
 		Status: "Success",
@@ -451,7 +442,7 @@ func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, er
 			Role: data.Name,
 		},
 	}
-	accesses, err := c.useCase.GetAllAccessByRoleId(id)
+	accesses, err := c.useCase.GetAllAccessByRoleId(idUint)
 	if err != nil {
 		return nil, err
 	}
@@ -502,16 +493,7 @@ func (c controller) deleteRole(id string) error {
 	}
 	idUint := uint(idUint64)
 
-	_, err = c.useCase.GetRoleById(id)
-	if err != nil {
-		return err
-	}
-	err = c.useCase.DeleteAccess(idUint)
-	if err != nil {
-		return err
-	}
-
-	err = c.useCase.DeleteRole(id)
+	err = c.useCase.DeleteRole(idUint)
 	if err != nil {
 		return err
 	}

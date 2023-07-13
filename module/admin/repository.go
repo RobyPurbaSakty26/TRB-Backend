@@ -24,8 +24,8 @@ type repository struct {
 type AdminRepositoryInterface interface {
 	GetAllUser(offset, limit int) ([]entity.User, error)
 	GetAllRoles(offset, limit int) ([]entity.Role, error)
-	GetAllAccessByRoleId(id string) ([]entity.Access, error)
-	GetRoleById(id string) (*entity.Role, error)
+	GetAllAccessByRoleId(id uint) ([]entity.Access, error)
+	GetRoleById(id uint) (*entity.Role, error)
 	UpdateAccess(request *entity.Access, id uint) error
 	UpdateRole(role *entity.Role, id uint) error
 	UserApprove(user *entity.User) error
@@ -33,9 +33,9 @@ type AdminRepositoryInterface interface {
 	DeleteUser(id uint) error
 	CreateRole(req *entity.Role) error
 	CreateAccess(access *entity.Access) error
-	DeleteRole(id string) error
+	DeleteRole(id uint) error
 	DeleteAccess(id uint) error
-	AssignRole(roleId uint, userId string) error
+	AssignRole(roleId, userId uint) error
 	GetAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
 	GetListAccess() ([]string, error)
 	GetVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
@@ -152,7 +152,7 @@ func (r repository) GetAllTransaction(offset, limit int) ([]entity.MasterAccount
 	return datas, nil
 }
 
-func (r repository) AssignRole(roleId uint, userId string) error {
+func (r repository) AssignRole(roleId, userId uint) error {
 	var user entity.User
 	return r.db.Model(&user).
 		Where("id = ?", userId).
@@ -183,7 +183,7 @@ func (r repository) GetAllUser(offset, limit int) ([]entity.User, error) {
 	return user, nil
 }
 
-func (r repository) GetRoleById(id string) (*entity.Role, error) {
+func (r repository) GetRoleById(id uint) (*entity.Role, error) {
 	var role entity.Role
 	err := r.db.First(&role, id).Error
 	if err != nil {
@@ -191,7 +191,7 @@ func (r repository) GetRoleById(id string) (*entity.Role, error) {
 	}
 	return &role, nil
 }
-func (r repository) GetAllAccessByRoleId(id string) ([]entity.Access, error) {
+func (r repository) GetAllAccessByRoleId(id uint) ([]entity.Access, error) {
 	var access []entity.Access
 	err := r.db.Find(&access, "role_id = ?", id).Error
 	if err != nil {
@@ -218,7 +218,7 @@ func (r repository) DeleteAccess(id uint) error {
 	return r.db.Delete(&access, "role_id = ?", id).Error
 }
 
-func (r repository) DeleteRole(id string) error {
+func (r repository) DeleteRole(id uint) error {
 	var role entity.Role
 	return r.db.Delete(&role, id).Error
 }
