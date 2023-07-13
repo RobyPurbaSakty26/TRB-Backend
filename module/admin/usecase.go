@@ -100,7 +100,7 @@ func (u useCase) AssignRole(roleId, userId uint) error {
 	}
 	err = u.repo.AssignRole(roleId, userId)
 	if err != nil {
-		return errors.New("role id not found")
+		return errors.New("failed assign role id")
 	}
 	return nil
 }

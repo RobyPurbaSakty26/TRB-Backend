@@ -747,7 +747,7 @@ func Test_repository_assignRole(t *testing.T) {
 	}
 	type args struct {
 		roleId uint
-		userId string
+		userId uint
 	}
 	type testCase struct {
 		name    string
@@ -758,18 +758,14 @@ func Test_repository_assignRole(t *testing.T) {
 	var tests []testCase
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
-	//a := args{
-	//	roleId: 1,
-	//	userId: "1",
-	//}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("UPDATE `users` SET `role_id`=?,`updated_at`=? WHERE id = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("e")
-	mockQuery.ExpectExec(query).WithArgs(0, time.Time{}, "").WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(0, time.Time{}, 0).WillReturnError(err)
 	tests = append(tests, testCase{
-		name:   name,
-		fields: f,
-		//args:    a,
+		name:    name,
+		fields:  f,
+		args:    args{},
 		wantErr: true,
 	})
 	for _, tt := range tests {
@@ -1036,7 +1032,7 @@ func Test_repository_getRoleById(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1050,7 +1046,7 @@ func Test_repository_getRoleById(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("SELECT * FROM `roles` WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL ORDER BY `roles`.`id` LIMIT 1")
@@ -1104,7 +1100,7 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1117,7 +1113,7 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("SELECT * FROM `accesses` WHERE role_id = ? AND `accesses`.`deleted_at` IS NULL")
@@ -1320,7 +1316,7 @@ func Test_repository_deleteRole(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1332,13 +1328,12 @@ func Test_repository_deleteRole(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("UPDATE `roles` SET `deleted_at`=? WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL")
 	err := errors.New("e")
-	mockQuery.ExpectExec(query).
-		WithArgs(time.Time{}, "1").WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(time.Time{}, 1).WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    name,
 		fields:  f,
@@ -1457,7 +1452,7 @@ func Test_repository_getById(t *testing.T) {
 	}
 }
 
-func Test_repository_deleteUser1(t *testing.T) {
+func Test_repository_deleteUser(t *testing.T) {
 	type fields struct {
 		db *gorm.DB
 	}
@@ -1477,7 +1472,7 @@ func Test_repository_deleteUser1(t *testing.T) {
 		id: 1,
 	}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("UPDATE `users` SET `deleted_at`=? WHERE id = ? AND `accesses`.`deleted_at` IS NULL")
+	query := regexp.QuoteMeta("UPDATE `users` SET `deleted_at`=? WHERE `users`.`id` = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("e")
 	mockQuery.ExpectExec(query).
 		WithArgs(time.Time{}, 1).WillReturnError(err)
