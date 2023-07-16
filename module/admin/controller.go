@@ -53,19 +53,15 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 
 func (c controller) getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error) {
 	offset := (page - 1) * limit
-	req := request.GetByEmailUserRequset{
-		Email: email,
-		Page:  offset,
-		Limit: limit,
-	}
+
 	// get total
-	total, err := c.useCase.totalGetUserByEmail(&req)
+	total, err := c.useCase.totalGetUserByEmail(email)
 	if err != nil {
 		return nil, err
 	}
 
 	// get email
-	data, err := c.useCase.getUserByEmail(&req)
+	data, err := c.useCase.getUserByEmail(email, offset, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -92,16 +88,12 @@ func (c controller) getUserByEmail(email string, page, limit int) (*response.Pag
 
 func (c controller) getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error) {
 	offset := (page - 1) * limit
-	req := request.GetByUsernameUserRequset{
-		Username: username,
-		Page:     offset,
-		Limit:    limit,
-	}
-	total, err := c.useCase.totalGetUserByUsername(&req)
+
+	total, err := c.useCase.totalGetUserByUsername(username)
 	if err != nil {
 		return nil, err
 	}
-	data, err := c.useCase.getUserByUsername(&req)
+	data, err := c.useCase.getUserByUsername(username, offset, limit)
 	if err != nil {
 		return nil, err
 	}

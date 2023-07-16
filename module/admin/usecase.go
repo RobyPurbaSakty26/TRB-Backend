@@ -2,7 +2,6 @@ package admin
 
 import (
 	"trb-backend/module/entity"
-	"trb-backend/module/web/request"
 )
 
 /**
@@ -45,10 +44,10 @@ type UseCaseAdminInterface interface {
 	findVaByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionVirtualAccount, error)
 	TotalDataTransactionGiro(accNo, startDate, endDate string) (int64, error)
 	TotalDataTransactionVa(accNo, startDate, endDate string) (int64, error)
-	totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error)
-	totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error)
-	getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error)
-	getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error)
+	totalGetUserByUsername(username string) (int64, error)
+	totalGetUserByEmail(email string) (int64, error)
+	getUserByUsername(email string, page, limit int) ([]entity.User, error)
+	getUserByEmail(email string, page, limit int) ([]entity.User, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -57,20 +56,20 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	}
 }
 
-func (u useCase) getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error) {
-	return u.repo.getUserByEmail(req)
+func (u useCase) getUserByEmail(email string, page, limit int) ([]entity.User, error) {
+	return u.repo.getUserByEmail(email, page, limit)
 }
 
-func (u useCase) getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error) {
-	return u.repo.getUserByUsername(req)
+func (u useCase) getUserByUsername(username string, page, limit int) ([]entity.User, error) {
+	return u.repo.getUserByUsername(username, page, limit)
 }
 
-func (u useCase) totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error) {
-	return u.repo.totalGetUserByEmail(req)
+func (u useCase) totalGetUserByEmail(email string) (int64, error) {
+	return u.repo.totalGetUserByEmail(email)
 }
 
-func (u useCase) totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error) {
-	return u.repo.totalGetUserByUsername(req)
+func (u useCase) totalGetUserByUsername(username string) (int64, error) {
+	return u.repo.totalGetUserByUsername(username)
 }
 
 func (u useCase) TotalDataTransactionGiro(accNo, startDate, endDate string) (int64, error) {
