@@ -2,7 +2,6 @@ package admin
 
 import (
 	"trb-backend/module/entity"
-	"trb-backend/module/web/request"
 )
 
 /**
@@ -36,19 +35,19 @@ type UseCaseAdminInterface interface {
 	assignRole(roleId uint, userId string) error
 	getAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
 	getListAccess() ([]string, error)
-	findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
-	findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	findVirtualAccountByDate(accNo, startDate, endDate string) ([]entity.TransactionVirtualAccount, error)
+	findGiroByDate(accNo, startDate, endDate string) ([]entity.TransactionAccount, error)
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
-	findGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
-	findVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
-	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
-	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
-	totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error)
-	totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error)
-	getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error)
-	getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error)
+	findGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error)
+	findVaByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionVirtualAccount, error)
+	TotalDataTransactionGiro(accNo, startDate, endDate string) (int64, error)
+	TotalDataTransactionVa(accNo, startDate, endDate string) (int64, error)
+	totalGetUserByUsername(username string) (int64, error)
+	totalGetUserByEmail(email string) (int64, error)
+	getUserByUsername(email string, page, limit int) ([]entity.User, error)
+	getUserByEmail(email string, page, limit int) ([]entity.User, error)
 }
 
 func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
@@ -57,28 +56,28 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 	}
 }
 
-func (u useCase) getUserByEmail(req *request.GetByEmailUserRequset) ([]entity.User, error) {
-	return u.repo.getUserByEmail(req)
+func (u useCase) getUserByEmail(email string, page, limit int) ([]entity.User, error) {
+	return u.repo.getUserByEmail(email, page, limit)
 }
 
-func (u useCase) getUserByUsername(req *request.GetByUsernameUserRequset) ([]entity.User, error) {
-	return u.repo.getUserByUsername(req)
+func (u useCase) getUserByUsername(username string, page, limit int) ([]entity.User, error) {
+	return u.repo.getUserByUsername(username, page, limit)
 }
 
-func (u useCase) totalGetUserByEmail(req *request.GetByEmailUserRequset) (int64, error) {
-	return u.repo.totalGetUserByEmail(req)
+func (u useCase) totalGetUserByEmail(email string) (int64, error) {
+	return u.repo.totalGetUserByEmail(email)
 }
 
-func (u useCase) totalGetUserByUsername(req *request.GetByUsernameUserRequset) (int64, error) {
-	return u.repo.totalGetUserByUsername(req)
+func (u useCase) totalGetUserByUsername(username string) (int64, error) {
+	return u.repo.totalGetUserByUsername(username)
 }
 
-func (u useCase) TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error) {
-	return u.repo.TotalDataTransactionGiro(req)
+func (u useCase) TotalDataTransactionGiro(accNo, startDate, endDate string) (int64, error) {
+	return u.repo.TotalDataTransactionGiro(accNo, startDate, endDate)
 }
 
-func (u useCase) TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error) {
-	return u.repo.TotalDataTransactionGiro(req)
+func (u useCase) TotalDataTransactionVa(accNo, startDate, endDate string) (int64, error) {
+	return u.repo.TotalDataTransactionGiro(accNo, startDate, endDate)
 }
 
 func (u useCase) TotalDataUser() (int64, error) {
@@ -91,20 +90,20 @@ func (u useCase) TotalDataMaster() (int64, error) {
 	return u.repo.TotalDataMaster()
 }
 
-func (u useCase) findGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
-	return u.repo.getGiroByDatePagination(req)
+func (u useCase) findGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error) {
+	return u.repo.getGiroByDatePagination(accNo, startDate, endDate, limit, page)
 }
 
-func (u useCase) findVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
-	return u.repo.getVaByDatePagination(req)
+func (u useCase) findVaByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionVirtualAccount, error) {
+	return u.repo.getVaByDatePagination(accNo, startDate, endDate, limit, page)
 }
 
-func (u useCase) findGiroByDate(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
-	return u.repo.getGiroByDate(req)
+func (u useCase) findGiroByDate(accNo, startDate, endDate string) ([]entity.TransactionAccount, error) {
+	return u.repo.getGiroByDate(accNo, startDate, endDate)
 }
 
-func (u useCase) findVirtualAccountByDate(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error) {
-	return u.repo.getVirtualAccountByDate(req)
+func (u useCase) findVirtualAccountByDate(accNo, startDate, endDate string) ([]entity.TransactionVirtualAccount, error) {
+	return u.repo.getVirtualAccountByDate(accNo, startDate, endDate)
 }
 
 func (u useCase) getListAccess() ([]string, error) {

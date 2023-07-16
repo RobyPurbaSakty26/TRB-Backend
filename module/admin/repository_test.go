@@ -2,8 +2,6 @@ package admin
 
 import (
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"gorm.io/gorm"
 	"reflect"
 	"regexp"
 	"testing"
@@ -11,6 +9,9 @@ import (
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/test"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"gorm.io/gorm"
 )
 
 func Test_repository_TotalDataUser(t *testing.T) {
@@ -177,7 +178,9 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		req *request.FillterTransactionByDate
+		accNo     string
+		startDate string
+		endDate   string
 	}
 	type testCase struct {
 		name    string
@@ -194,7 +197,9 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 		EndDate:   "",
 	}
 	a := args{
-		req: r,
+		accNo:     "123",
+		startDate: "2020-20-20",
+		endDate:   "2023-20-20",
 	}
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
@@ -226,7 +231,7 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.TotalDataTransactionGiro(tt.args.req)
+			got, err := r.TotalDataTransactionGiro(tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TotalDataTransactionGiro() error = %v, wantErr %v", err, tt.wantErr)
 				return
