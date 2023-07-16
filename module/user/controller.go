@@ -188,21 +188,6 @@ func (c controller) updatePassword(req *request.UpdatePasswordRequest) (*respons
 		return nil, err
 	}
 
-	// user := &entity.User{
-	// 	Password: data.Password,
-	// 	Email:    data.Email,
-	// }
-
-	// newPassword, err := helpers.HashPass(req.Password)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
-	// err = c.useCase.updatePassword(user, newPassword)
-	// if err != nil {
-	// 	return nil, err
-	// }
-
 	res := &response.UpdatePasswordResponse{
 		Status:  "Success",
 		Message: "Password changed successfully",
