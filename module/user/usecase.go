@@ -1,6 +1,8 @@
 package user
 
 import (
+	"errors"
+	"trb-backend/helpers"
 	"trb-backend/module/entity"
 )
 
@@ -28,10 +30,67 @@ type UseCaseInterface interface {
 	updateIsActive(user *entity.User, isActive bool) error
 	getById(id int) (*entity.User, error)
 	getAccessByRoleId(id uint) ([]entity.Access, error)
+	login(username string) (*entity.User, error)
+	forgotPassword(email, usename, password string) error
 }
 
 func NewUseCase(repo UserRepositoryInterface) UseCaseInterface {
 	return UseCase{repo: repo}
+}
+
+func (u UseCase) forgotPassword(email, username, password string) error {
+	// check user by username
+	user, err := u.repo.getByEmail(email)
+	if err != nil || user.Username != username {
+		return errors.New("user not found")
+	}
+
+	// has password
+	newPassword, err := helpers.HashPass(password)
+	if err != nil {
+		return err
+	}
+
+	// update password
+	err = u.repo.updatePassword(user, newPassword)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (u UseCase) login(username string) (*entity.User, error) {
+	user, err := u.repo.getByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+
+	// reset input false if > 3 hour
+	hourLastUpdate := helpers.IsThreeHours(user.UpdatedAt)
+	if hourLastUpdate > 3 {
+		err := u.repo.updateInputFalse(user, 0)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// check input false, if false > 3 status user false
+	if user.InputFalse >= 3 {
+		err = u.repo.updateStatusIsActive(user, false)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// get new data user
+	user, _ = u.repo.getByUsername(username)
+
+	// check is active
+	if user.Active != true {
+		return nil, errors.New("The account is not yet activated")
+	}
+	return user, nil
 }
 
 func (u UseCase) getAccessByRoleId(id uint) ([]entity.Access, error) {
@@ -39,6 +98,16 @@ func (u UseCase) getAccessByRoleId(id uint) ([]entity.Access, error) {
 }
 
 func (u UseCase) create(user *entity.User) error {
+	_, err := u.repo.getByEmail(user.Email)
+	if err == nil {
+		return errors.New("Email already registered")
+	}
+
+	_, err = u.repo.getByUsername(user.Username)
+	if err == nil {
+		return errors.New("Username already registered")
+	}
+
 	return u.repo.save(user)
 }
 

@@ -2,8 +2,6 @@ package admin
 
 import (
 	"errors"
-	"github.com/DATA-DOG/go-sqlmock"
-	"gorm.io/gorm"
 	"reflect"
 	"regexp"
 	"testing"
@@ -11,6 +9,9 @@ import (
 	"trb-backend/module/entity"
 	"trb-backend/module/web/request"
 	"trb-backend/test"
+
+	"github.com/DATA-DOG/go-sqlmock"
+	"gorm.io/gorm"
 )
 
 func Test_repository_TotalDataUser(t *testing.T) {
@@ -177,7 +178,9 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		req *request.FillterTransactionByDate
+		accNo     string
+		startDate string
+		endDate   string
 	}
 	type testCase struct {
 		name    string
@@ -194,7 +197,9 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 		EndDate:   "",
 	}
 	a := args{
-		req: r,
+		accNo:     "123",
+		startDate: "2020-20-20",
+		endDate:   "2023-20-20",
 	}
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
@@ -226,7 +231,7 @@ func Test_repository_TotalDataTransactionGiro(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.TotalDataTransactionGiro(tt.args.req)
+			got, err := r.TotalDataTransactionGiro(tt.args)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("TotalDataTransactionGiro() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -367,7 +372,7 @@ func Test_repository_getGiroByDatePagination(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getGiroByDatePagination(tt.args.req)
+			got, err := r.GetGiroByDatePagination(tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getGiroByDatePagination() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -443,7 +448,7 @@ func Test_repository_getVaByDatePagination(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getVaByDatePagination(tt.args.req)
+			got, err := r.GetVaByDatePagination(tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getVaByDatePagination() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -518,7 +523,7 @@ func Test_repository_getGiroByDate(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getGiroByDate(tt.args.req)
+			got, err := r.GetGiroByDate(tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getGiroByDate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -594,7 +599,7 @@ func Test_repository_getVirtualAccountByDate(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getVirtualAccountByDate(tt.args.req)
+			got, err := r.GetVirtualAccountByDate(tt.args.req)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getVirtualAccountByDate() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -654,7 +659,7 @@ func Test_repository_getListAccess(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getListAccess()
+			got, err := r.GetListAccess()
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getListAccess() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -729,7 +734,7 @@ func Test_repository_getAllTransaction(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getAllTransaction(tt.args.offset, tt.args.limit)
+			got, err := r.GetAllTransaction(tt.args.offset, tt.args.limit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getAllTransaction() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -747,7 +752,7 @@ func Test_repository_assignRole(t *testing.T) {
 	}
 	type args struct {
 		roleId uint
-		userId string
+		userId uint
 	}
 	type testCase struct {
 		name    string
@@ -758,18 +763,14 @@ func Test_repository_assignRole(t *testing.T) {
 	var tests []testCase
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
-	//a := args{
-	//	roleId: 1,
-	//	userId: "1",
-	//}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("UPDATE `users` SET `role_id`=?,`updated_at`=? WHERE id = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("e")
-	mockQuery.ExpectExec(query).WithArgs(0, time.Time{}, "").WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(0, time.Time{}, 0).WillReturnError(err)
 	tests = append(tests, testCase{
-		name:   name,
-		fields: f,
-		//args:    a,
+		name:    name,
+		fields:  f,
+		args:    args{},
 		wantErr: true,
 	})
 	for _, tt := range tests {
@@ -777,7 +778,7 @@ func Test_repository_assignRole(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.assignRole(tt.args.roleId, tt.args.userId); (err != nil) != tt.wantErr {
+			if err := r.AssignRole(tt.args.roleId, tt.args.userId); (err != nil) != tt.wantErr {
 				t.Errorf("assignRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -841,7 +842,7 @@ func Test_repository_getAllRoles(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getAllRoles(tt.args.offset, tt.args.limit)
+			got, err := r.GetAllRoles(tt.args.offset, tt.args.limit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getAllRoles() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -892,7 +893,7 @@ func Test_repository_createRole(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.createRole(tt.args.req); (err != nil) != tt.wantErr {
+			if err := r.CreateRole(tt.args.req); (err != nil) != tt.wantErr {
 				t.Errorf("createRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -940,7 +941,7 @@ func Test_repository_createAccess(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.createAccess(tt.args.access); (err != nil) != tt.wantErr {
+			if err := r.CreateAccess(tt.args.access); (err != nil) != tt.wantErr {
 				t.Errorf("createAccess() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1019,7 +1020,7 @@ func Test_repository_getAllUser(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getAllUser(tt.args.offset, tt.args.limit)
+			got, err := r.GetAllUser(tt.args.offset, tt.args.limit)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getAllUser() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1036,7 +1037,7 @@ func Test_repository_getRoleById(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1050,7 +1051,7 @@ func Test_repository_getRoleById(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("SELECT * FROM `roles` WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL ORDER BY `roles`.`id` LIMIT 1")
@@ -1087,7 +1088,7 @@ func Test_repository_getRoleById(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getRoleById(tt.args.id)
+			got, err := r.GetRoleById(tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getRoleById() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1104,7 +1105,7 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1117,7 +1118,7 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("SELECT * FROM `accesses` WHERE role_id = ? AND `accesses`.`deleted_at` IS NULL")
@@ -1161,7 +1162,7 @@ func Test_repository_getAllAccessByRoleId(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getAllAccessByRoleId(tt.args.id)
+			got, err := r.GetAllAccessByRoleId(tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getAllAccessByRoleId() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1215,7 +1216,7 @@ func Test_repository_updateRole(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.updateRole(tt.args.role, tt.args.id); (err != nil) != tt.wantErr {
+			if err := r.UpdateRole(tt.args.role, tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("updateRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1266,7 +1267,7 @@ func Test_repository_updateAccess(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.updateAccess(tt.args.request, tt.args.id); (err != nil) != tt.wantErr {
+			if err := r.UpdateAccess(tt.args.request, tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("updateAccess() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1308,7 +1309,7 @@ func Test_repository_deleteAccess(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.deleteAccess(tt.args.id); (err != nil) != tt.wantErr {
+			if err := r.DeleteAccess(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("deleteAccess() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1320,7 +1321,7 @@ func Test_repository_deleteRole(t *testing.T) {
 		db *gorm.DB
 	}
 	type args struct {
-		id string
+		id uint
 	}
 	type testCase struct {
 		name    string
@@ -1332,13 +1333,12 @@ func Test_repository_deleteRole(t *testing.T) {
 	mockQuery, mockDb := test.NewMockQueryDB(t)
 	name := "error"
 	a := args{
-		id: "1",
+		id: 1,
 	}
 	f := fields{db: mockDb}
 	query := regexp.QuoteMeta("UPDATE `roles` SET `deleted_at`=? WHERE `roles`.`id` = ? AND `roles`.`deleted_at` IS NULL")
 	err := errors.New("e")
-	mockQuery.ExpectExec(query).
-		WithArgs(time.Time{}, "1").WillReturnError(err)
+	mockQuery.ExpectExec(query).WithArgs(time.Time{}, 1).WillReturnError(err)
 	tests = append(tests, testCase{
 		name:    name,
 		fields:  f,
@@ -1350,7 +1350,7 @@ func Test_repository_deleteRole(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.deleteRole(tt.args.id); (err != nil) != tt.wantErr {
+			if err := r.DeleteRole(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("deleteRole() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1400,7 +1400,7 @@ func Test_repository_userApprove(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			if err := r.userApprove(tt.args.user); (err != nil) != tt.wantErr {
+			if err := r.UserApprove(tt.args.user); (err != nil) != tt.wantErr {
 				t.Errorf("userApprove() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
@@ -1445,7 +1445,7 @@ func Test_repository_getById(t *testing.T) {
 			r := repository{
 				db: tt.fields.db,
 			}
-			got, err := r.getById(tt.args.id)
+			got, err := r.GetById(tt.args.id)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("getById() error = %v, wantErr %v", err, tt.wantErr)
 				return
@@ -1457,7 +1457,7 @@ func Test_repository_getById(t *testing.T) {
 	}
 }
 
-func Test_repository_deleteUser1(t *testing.T) {
+func Test_repository_deleteUser(t *testing.T) {
 	type fields struct {
 		db *gorm.DB
 	}
@@ -1477,7 +1477,7 @@ func Test_repository_deleteUser1(t *testing.T) {
 		id: 1,
 	}
 	f := fields{db: mockDb}
-	query := regexp.QuoteMeta("UPDATE `users` SET `deleted_at`=? WHERE id = ? AND `accesses`.`deleted_at` IS NULL")
+	query := regexp.QuoteMeta("UPDATE `users` SET `deleted_at`=? WHERE `users`.`id` = ? AND `users`.`deleted_at` IS NULL")
 	err := errors.New("e")
 	mockQuery.ExpectExec(query).
 		WithArgs(time.Time{}, 1).WillReturnError(err)
@@ -1492,7 +1492,7 @@ func Test_repository_deleteUser1(t *testing.T) {
 			r := &repository{
 				db: tt.fields.db,
 			}
-			if err := r.deleteUser(tt.args.id); (err != nil) != tt.wantErr {
+			if err := r.DeleteUser(tt.args.id); (err != nil) != tt.wantErr {
 				t.Errorf("deleteUser() error = %v, wantErr %v", err, tt.wantErr)
 			}
 		})
