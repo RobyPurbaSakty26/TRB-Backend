@@ -41,6 +41,8 @@ type ControllerAdminInterface interface {
 	getAllTransaction(page, limit string) (*response.PaginateMonitoring, error)
 	findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error)
 	findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error)
+	getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error)
+	getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error)
 }
 
 func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface {
@@ -49,18 +51,78 @@ func NewAdminController(usecase UseCaseAdminInterface) ControllerAdminInterface 
 	}
 }
 
+func (c controller) getUserByEmail(email string, page, limit int) (*response.PaginateUserResponse, error) {
+	offset := (page - 1) * limit
+
+	// get total
+	total, err := c.useCase.totalGetUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	// get email
+	data, err := c.useCase.getUserByEmail(email, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	totalPage := float64(total) / float64(limit)
+	res := &response.PaginateUserResponse{
+		Page:       page,
+		Limit:      limit,
+		Total:      int(total),
+		TotalPages: math.Ceil(totalPage),
+	}
+	for _, item := range data {
+		res.Data = append(res.Data, response.ItemResponse{
+			ID:       item.ID,
+			Username: item.Username,
+			Fullname: item.Fullname,
+			Email:    item.Email,
+			IsActive: item.Active,
+			RoleId:   item.RoleId,
+			Role:     item.Role.Name,
+		})
+	}
+	return res, nil
+}
+
+func (c controller) getUserByUsername(username string, page, limit int) (*response.PaginateUserResponse, error) {
+	offset := (page - 1) * limit
+
+	total, err := c.useCase.totalGetUserByUsername(username)
+	if err != nil {
+		return nil, err
+	}
+	data, err := c.useCase.getUserByUsername(username, offset, limit)
+	if err != nil {
+		return nil, err
+	}
+	totalPage := float64(total) / float64(limit)
+	res := &response.PaginateUserResponse{
+		Page:       page,
+		Limit:      limit,
+		Total:      int(total),
+		TotalPages: math.Ceil(totalPage),
+	}
+	for _, item := range data {
+		res.Data = append(res.Data, response.ItemResponse{
+			ID:       item.ID,
+			Username: item.Username,
+			Fullname: item.Fullname,
+			Email:    item.Email,
+			IsActive: item.Active,
+			RoleId:   item.RoleId,
+			Role:     item.Role.Name,
+		})
+	}
+	return res, nil
+}
+
 func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
 	// transform request
 	offset := (page - 1) * limit
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      offset,
-		Limit:     limit,
-	}
 
-	count, err := c.useCase.TotalDataTransactionGiro(&req)
+	count, err := c.useCase.TotalDataTransactionGiro(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
@@ -69,7 +131,7 @@ func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, p
 	countInt := int(count)
 	totalPage := float64(countInt) / float64(limit)
 
-	datas, err := c.useCase.FindGiroByDatePagination(&req)
+	datas, err := c.useCase.findGiroByDatePagination(accNo, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -113,15 +175,8 @@ func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, p
 func (c controller) findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error) {
 	// transform request
 	offset := (page - 1) * limit
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      offset,
-		Limit:     limit,
-	}
 
-	count, err := c.useCase.TotalDataTransactionVa(&req)
+	count, err := c.useCase.TotalDataTransactionVa(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
@@ -130,7 +185,8 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 	countInt := int(count)
 	totalPage := float64(countInt) / float64(limit)
 
-	datas, err := c.useCase.FindVaByDatePagination(&req)
+	datas, err := c.useCase.findVaByDatePagination(accNo, startDate, endDate, limit, offset)
+
 	if err != nil {
 		return nil, err
 	}
@@ -173,14 +229,9 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 }
 
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
-	// transform request
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-	}
 
-	datas, err := c.useCase.FindGiroByDate(&req)
+	datas, err := c.useCase.findGiroByDate(accNo, startDate, endDate)
+
 	if err != nil {
 		return nil, err
 	}
@@ -218,14 +269,9 @@ func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.
 }
 
 func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error) {
-	// transform request
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-	}
+
 	// call function for get data and checking error
-	datas, err := c.useCase.FindVirtualAccountByDate(&req)
+	datas, err := c.useCase.findVirtualAccountByDate(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
