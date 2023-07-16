@@ -146,7 +146,7 @@ func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, p
 	countInt := int(count)
 	totalPage := float64(countInt) / float64(limit)
 
-	datas, err := c.useCase.findGiroByDatePagination(&req)
+	datas, err := c.useCase.findGiroByDatePagination(accNo, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, err
 	}

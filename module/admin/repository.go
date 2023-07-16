@@ -43,7 +43,7 @@ type AdminRepositoryInterface interface {
 	TotalDataMaster() (int64, error)
 	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
-	getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error)
+	getGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error)
 	getVaByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionVirtualAccount, error)
 	TotalDataTransactionGiro(req *request.FillterTransactionByDate) (int64, error)
 	TotalDataTransactionVa(req *request.FillterTransactionByDate) (int64, error)
@@ -137,9 +137,9 @@ func (r repository) TotalDataTransactionVa(req *request.FillterTransactionByDate
 	return count, nil
 }
 
-func (r repository) getGiroByDatePagination(req *request.FillterTransactionByDate) ([]entity.TransactionAccount, error) {
+func (r repository) getGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error) {
 	var datas []entity.TransactionAccount
-	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", req.AccNo, req.StartDate, req.EndDate).Limit(req.Limit).Offset(req.Page).Find(&datas).Error
+	err := r.db.Where("account_no = ? AND (transaction_date >= ? AND transaction_date <= ?)", accNo, startDate, endDate).Limit(limit).Offset(page).Find(&datas).Error
 	if err != nil {
 		return nil, err
 	}
