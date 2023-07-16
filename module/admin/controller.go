@@ -186,6 +186,7 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 	totalPage := float64(countInt) / float64(limit)
 
 	datas, err := c.useCase.findVaByDatePagination(accNo, startDate, endDate, limit, offset)
+
 	if err != nil {
 		return nil, err
 	}
@@ -230,6 +231,7 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
 
 	datas, err := c.useCase.findGiroByDate(accNo, startDate, endDate)
+
 	if err != nil {
 		return nil, err
 	}
@@ -307,9 +309,9 @@ func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string)
 }
 
 func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
-	res, err := c.useCase.getListAccess()
+	res, err := c.useCase.GetListAccess()
 	if err != nil {
-		return nil, err
+		return nil, errors.New("Data list access not found")
 	}
 
 	result := response.ResponseAccessName{
@@ -326,10 +328,9 @@ func (c controller) getListAccessName() (*response.ResponseAccessName, error) {
 func (c controller) getAllTransaction(page, limit string) (*response.PaginateMonitoring, error) {
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
-	count, err := c.useCase.TotalDataMaster()
-	if err != nil {
-		return nil, errors.New("cannot get total data master")
-	}
+
+	offset := (pageInt - 1) * limitInt
+	datas, count, err := c.useCase.GetAllTransaction(offset, limitInt)
 	countInt := int(count)
 
 	totalPage := float64(countInt) / float64(limitInt)
@@ -340,8 +341,6 @@ func (c controller) getAllTransaction(page, limit string) (*response.PaginateMon
 		TotalPages: math.Ceil(totalPage),
 	}
 
-	offset := (pageInt - 1) * limitInt
-	datas, err := c.useCase.getAllTransaction(offset, limitInt)
 	if err != nil {
 		return nil, err
 	}
@@ -371,12 +370,7 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 	}
 	idUser := uint(idUserUint64)
 
-	_, err = c.useCase.getById(idUser)
-	if err != nil {
-		return err
-	}
-
-	err = c.useCase.assignRole(roleId, id)
+	err = c.useCase.AssignRole(roleId, idUser)
 	if err != nil {
 		return err
 	}
@@ -386,12 +380,12 @@ func (c controller) assignRole(req request.AssignRoleRequest, id string) error {
 func (c controller) getAllRole(page, limit string) (*response.PaginateRole, error) {
 	pageInt, _ := strconv.Atoi(page)
 	limitInt, _ := strconv.Atoi(limit)
-	count, err := c.useCase.TotalDataRole()
+	offset := (pageInt - 1) * limitInt
+	roles, count, err := c.useCase.GetAllRoles(offset, limitInt)
 	if err != nil {
-		return nil, errors.New("cannot get total data master")
+		return nil, errors.New("Cannot get all data roles")
 	}
 	countInt := int(count)
-
 	totalPage := float64(countInt) / float64(limitInt)
 	result := response.PaginateRole{
 		Page:       pageInt,
@@ -399,19 +393,13 @@ func (c controller) getAllRole(page, limit string) (*response.PaginateRole, erro
 		Total:      countInt,
 		TotalPages: math.Ceil(totalPage),
 	}
-	offset := (pageInt - 1) * limitInt
-	roles, err := c.useCase.getAllRoles(offset, limitInt)
-	if err != nil {
-		return nil, errors.New("Cannot get all data roles")
-	}
 
 	for _, role := range roles {
 		item := response.ItemRole{
 			Id:   role.ID,
 			Name: role.Name,
 		}
-		idStr := strconv.FormatUint(uint64(role.ID), 10)
-		itemAccess, _ := c.useCase.getAllAccessByRoleId(idStr)
+		itemAccess, _ := c.useCase.GetAllAccessByRoleId(role.ID)
 		for _, data := range itemAccess {
 			temp := response.AccessItem{
 				Resource: data.Resource,
@@ -429,7 +417,7 @@ func (c controller) createRole(req *request.UpdateAccessRequest) error {
 	role := entity.Role{
 		Name: req.Role,
 	}
-	err := c.useCase.createRole(&role)
+	err := c.useCase.CreateRole(&role)
 	if err != nil {
 		return err
 	}
@@ -441,7 +429,7 @@ func (c controller) createRole(req *request.UpdateAccessRequest) error {
 			CanRead:  access.CanRead,
 			CanWrite: access.CanWrite,
 		}
-		err := c.useCase.createAccess(accessReq)
+		err := c.useCase.CreateAccess(accessReq)
 		if err != nil {
 			return err
 		}
@@ -466,7 +454,7 @@ func (c controller) getAllUser(page, limit string) (*response.PaginateUserRespon
 		TotalPages: math.Ceil(totalPage),
 	}
 	offset := (pageInt - 1) * limitInt
-	users, err := c.useCase.getAllUser(offset, limitInt)
+	users, err := c.useCase.GetAllUser(offset, limitInt)
 	if err != nil {
 		return nil, errors.New("Cannot get all data users")
 	}
@@ -487,7 +475,12 @@ func (c controller) getAllUser(page, limit string) (*response.PaginateUserRespon
 }
 
 func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, error) {
-	data, err := c.useCase.getRoleById(id)
+	idUint64, err := strconv.ParseUint(id, 10, 64)
+	if err != nil {
+		return nil, errors.New("cannot parse id string to uint64")
+	}
+	idUint := uint(idUint64)
+	data, err := c.useCase.GetRoleById(idUint)
 
 	result := &response.RoleUserResponse{
 		Status: "Success",
@@ -495,7 +488,7 @@ func (c controller) getRoleWithAccess(id string) (*response.RoleUserResponse, er
 			Role: data.Name,
 		},
 	}
-	accesses, err := c.useCase.getAllAccessByRoleId(id)
+	accesses, err := c.useCase.GetAllAccessByRoleId(idUint)
 	if err != nil {
 		return nil, err
 	}
@@ -520,7 +513,7 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 	role := &entity.Role{
 		Name: req.Role,
 	}
-	err = c.useCase.updateRole(role, idUint)
+	err = c.useCase.UpdateRole(role, idUint)
 	if err != nil {
 		return err
 	}
@@ -531,7 +524,7 @@ func (c controller) updateAccessUser(req *request.UpdateAccessRequest, id string
 			CanRead:  access.CanRead,
 			CanWrite: access.CanWrite,
 		}
-		err := c.useCase.updateAccess(accessReq, idUint)
+		err := c.useCase.UpdateAccess(accessReq, idUint)
 		if err != nil {
 			return err
 		}
@@ -546,16 +539,7 @@ func (c controller) deleteRole(id string) error {
 	}
 	idUint := uint(idUint64)
 
-	_, err = c.useCase.getRoleById(id)
-	if err != nil {
-		return err
-	}
-	err = c.useCase.deleteAccess(idUint)
-	if err != nil {
-		return err
-	}
-
-	err = c.useCase.deleteRole(id)
+	err = c.useCase.DeleteRole(idUint)
 	if err != nil {
 		return err
 	}
@@ -564,14 +548,14 @@ func (c controller) deleteRole(id string) error {
 
 func (c controller) UserApprove(id uint) (*response.UserApproveResponse, error) {
 
-	data, err := c.useCase.getById(id)
+	data, err := c.useCase.GetById(id)
 	if err != nil {
 		return nil, err
 	}
 
-	err = c.useCase.userApprove(data)
+	err = c.useCase.UserApprove(data)
 
-	data, _ = c.useCase.getById(id)
+	data, _ = c.useCase.GetById(id)
 
 	res := &response.UserApproveResponse{
 		Status: "Success",
@@ -588,13 +572,13 @@ func (c controller) UserApprove(id uint) (*response.UserApproveResponse, error) 
 
 func (c controller) deleteUser(id uint) error {
 	// Cek apakah pengguna dengan ID tersebut ada dalam sistem
-	user, err := c.useCase.getById(id)
+	user, err := c.useCase.GetById(id)
 	if err != nil {
 		return err
 	}
 
 	// Hapus pengguna dari use case
-	err = c.useCase.deleteUser(user.ID)
+	err = c.useCase.DeleteUser(user.ID)
 	if err != nil {
 		return err
 	}

@@ -98,6 +98,16 @@ func (u UseCase) getAccessByRoleId(id uint) ([]entity.Access, error) {
 }
 
 func (u UseCase) create(user *entity.User) error {
+	_, err := u.repo.getByEmail(user.Email)
+	if err == nil {
+		return errors.New("Email already registered")
+	}
+
+	_, err = u.repo.getByUsername(user.Username)
+	if err == nil {
+		return errors.New("Username already registered")
+	}
+
 	return u.repo.save(user)
 }
 

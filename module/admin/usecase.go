@@ -1,6 +1,7 @@
 package admin
 
 import (
+	"errors"
 	"trb-backend/module/entity"
 )
 
@@ -19,26 +20,23 @@ type useCase struct {
 }
 
 type UseCaseAdminInterface interface {
-	getAllUser(offset, limit int) ([]entity.User, error)
-	getAllRoles(offset, limit int) ([]entity.Role, error)
-	createRole(req *entity.Role) error
-	updateAccess(req *entity.Access, id uint) error
-	getAllAccessByRoleId(id string) ([]entity.Access, error)
-	getRoleById(id string) (*entity.Role, error)
-	updateRole(role *entity.Role, id uint) error
-	userApprove(user *entity.User) error
-	getById(id uint) (*entity.User, error)
-	deleteUser(id uint) error
-	createAccess(access *entity.Access) error
-	deleteAccess(id uint) error
-	deleteRole(id string) error
-	assignRole(roleId uint, userId string) error
-	getAllTransaction(offset, limit int) ([]entity.MasterAccount, error)
-	getListAccess() ([]string, error)
+	GetAllUser(offset, limit int) ([]entity.User, error)
+	GetAllRoles(offset, limit int) ([]entity.Role, int64, error)
+	CreateRole(req *entity.Role) error
+	UpdateAccess(req *entity.Access, id uint) error
+	GetAllAccessByRoleId(id uint) ([]entity.Access, error)
+	GetRoleById(id uint) (*entity.Role, error)
+	UpdateRole(role *entity.Role, id uint) error
+	UserApprove(user *entity.User) error
+	GetById(id uint) (*entity.User, error)
+	DeleteUser(id uint) error
+	CreateAccess(access *entity.Access) error
+	DeleteRole(id uint) error
+	AssignRole(roleId, userId uint) error
+	GetAllTransaction(offset, limit int) ([]entity.MasterAccount, int64, error)
+	GetListAccess() ([]string, error)
 	findVirtualAccountByDate(accNo, startDate, endDate string) ([]entity.TransactionVirtualAccount, error)
 	findGiroByDate(accNo, startDate, endDate string) ([]entity.TransactionAccount, error)
-	TotalDataMaster() (int64, error)
-	TotalDataRole() (int64, error)
 	TotalDataUser() (int64, error)
 	findGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error)
 	findVaByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionVirtualAccount, error)
@@ -83,12 +81,6 @@ func (u useCase) TotalDataTransactionVa(accNo, startDate, endDate string) (int64
 func (u useCase) TotalDataUser() (int64, error) {
 	return u.repo.TotalDataUser()
 }
-func (u useCase) TotalDataRole() (int64, error) {
-	return u.repo.TotalDataRole()
-}
-func (u useCase) TotalDataMaster() (int64, error) {
-	return u.repo.TotalDataMaster()
-}
 
 func (u useCase) findGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error) {
 	return u.repo.getGiroByDatePagination(accNo, startDate, endDate, limit, page)
@@ -106,68 +98,103 @@ func (u useCase) findVirtualAccountByDate(accNo, startDate, endDate string) ([]e
 	return u.repo.getVirtualAccountByDate(accNo, startDate, endDate)
 }
 
-func (u useCase) getListAccess() ([]string, error) {
-	return u.repo.getListAccess()
+func (u useCase) GetListAccess() ([]string, error) {
+	return u.repo.GetListAccess()
 }
-func (u useCase) getAllTransaction(offset, limit int) ([]entity.MasterAccount, error) {
-	return u.repo.getAllTransaction(offset, limit)
+func (u useCase) GetAllTransaction(offset, limit int) ([]entity.MasterAccount, int64, error) {
+	count, err := u.repo.TotalDataMaster()
+	if err != nil {
+		return nil, 0, errors.New("failed get total data transaction")
+	}
+	data, err := u.repo.GetAllTransaction(offset, limit)
+	if err != nil {
+		return nil, 0, errors.New("failed get data transaction")
+	}
+	return data, count, nil
 }
-func (u useCase) assignRole(roleId uint, userId string) error {
-	return u.repo.assignRole(roleId, userId)
+func (u useCase) AssignRole(roleId, userId uint) error {
+	_, err := u.repo.GetById(userId)
+	if err != nil {
+		return errors.New("user id not found")
+	}
+	err = u.repo.AssignRole(roleId, userId)
+	if err != nil {
+		return errors.New("failed assign role id")
+	}
+	return nil
 }
-func (u useCase) getAllRoles(offset, limit int) ([]entity.Role, error) {
-	return u.repo.getAllRoles(offset, limit)
+func (u useCase) GetAllRoles(offset, limit int) ([]entity.Role, int64, error) {
+	count, err := u.repo.TotalDataRole()
+	if err != nil {
+		return nil, 0, errors.New("failed get total data roles")
+	}
+	data, err := u.repo.GetAllRoles(offset, limit)
+	if err != nil {
+		return nil, 0, errors.New("failed get data roles")
+	}
+	return data, count, nil
 }
-func (u useCase) createRole(req *entity.Role) error {
-	return u.repo.createRole(req)
-}
-
-func (u useCase) createAccess(access *entity.Access) error {
-	return u.repo.createAccess(access)
-}
-
-func (u useCase) getAllUser(offset, limit int) ([]entity.User, error) {
-	return u.repo.getAllUser(offset, limit)
-}
-
-func (u useCase) updateAccess(req *entity.Access, id uint) error {
-	return u.repo.updateAccess(req, id)
-}
-
-func (u useCase) getRoleById(id string) (*entity.Role, error) {
-	return u.repo.getRoleById(id)
-}
-
-func (u useCase) getAllAccessByRoleId(id string) ([]entity.Access, error) {
-	return u.repo.getAllAccessByRoleId(id)
-}
-
-func (u useCase) deleteAccess(id uint) error {
-	return u.repo.deleteAccess(id)
-}
-
-func (u useCase) deleteRole(id string) error {
-	return u.repo.deleteRole(id)
+func (u useCase) CreateRole(req *entity.Role) error {
+	return u.repo.CreateRole(req)
 }
 
-func (u useCase) updateRole(role *entity.Role, id uint) error {
-	return u.repo.updateRole(role, id)
-}
-func (u useCase) userApprove(user *entity.User) error {
-	return u.repo.userApprove(user)
+func (u useCase) CreateAccess(access *entity.Access) error {
+	return u.repo.CreateAccess(access)
 }
 
-func (u useCase) getById(id uint) (*entity.User, error) {
-	return u.repo.getById(id)
+func (u useCase) GetAllUser(offset, limit int) ([]entity.User, error) {
+	return u.repo.GetAllUser(offset, limit)
 }
 
-func (u useCase) deleteUser(id uint) error {
+func (u useCase) UpdateAccess(req *entity.Access, id uint) error {
+	return u.repo.UpdateAccess(req, id)
+}
+func (u useCase) GetRoleById(id uint) (*entity.Role, error) {
+	return u.repo.GetRoleById(id)
+}
+
+func (u useCase) GetAllAccessByRoleId(id uint) ([]entity.Access, error) {
+	_, err := u.repo.GetRoleById(id)
+	if err != nil {
+		return nil, errors.New("role id not found")
+	}
+	return u.repo.GetAllAccessByRoleId(id)
+}
+
+func (u useCase) DeleteRole(id uint) error {
+	_, err := u.repo.GetRoleById(id)
+	if err != nil {
+		return errors.New("role id not found")
+	}
+	err = u.repo.DeleteAccess(id)
+	if err != nil {
+		return errors.New("failed delete access")
+	}
+	err = u.repo.DeleteRole(id)
+	if err != nil {
+		return errors.New("failed delete role")
+	}
+	return nil
+}
+
+func (u useCase) UpdateRole(role *entity.Role, id uint) error {
+	return u.repo.UpdateRole(role, id)
+}
+func (u useCase) UserApprove(user *entity.User) error {
+	return u.repo.UserApprove(user)
+}
+
+func (u useCase) GetById(id uint) (*entity.User, error) {
+	return u.repo.GetById(id)
+}
+
+func (u useCase) DeleteUser(id uint) error {
 	// Periksa apakah pengguna dengan ID tersebut ada dalam sistem
-	_, err := u.repo.getById(id)
+	_, err := u.repo.GetById(id)
 	if err != nil {
 		return err
 	}
 
 	// Melakukan penghapusan pengguna dari repository
-	return u.repo.deleteUser(id)
+	return u.repo.DeleteUser(id)
 }

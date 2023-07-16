@@ -344,7 +344,7 @@ func (h requestAdminHandler) AssignRole(c *gin.Context) {
 }
 
 func (h requestAdminHandler) GetAllRoles(c *gin.Context) {
-	page := c.Query("Page")
+	page := c.Query("Page") //query huruf kecil
 	limit := c.Query("Limit")
 	if page == "" {
 		page = "1"
