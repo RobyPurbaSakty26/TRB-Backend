@@ -129,15 +129,8 @@ func (c controller) getUserByUsername(username string, page, limit int) (*respon
 func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionGiro, error) {
 	// transform request
 	offset := (page - 1) * limit
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      offset,
-		Limit:     limit,
-	}
 
-	count, err := c.useCase.TotalDataTransactionGiro(&req)
+	count, err := c.useCase.TotalDataTransactionGiro(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
@@ -190,15 +183,8 @@ func (c controller) findGiroBydatePagination(accNo, startDate, endDate string, p
 func (c controller) findVaBydatePagination(accNo, startDate, endDate string, page, limit int) (*response.ResponseTransactionVitualAccount, error) {
 	// transform request
 	offset := (page - 1) * limit
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-		Page:      offset,
-		Limit:     limit,
-	}
 
-	count, err := c.useCase.TotalDataTransactionVa(&req)
+	count, err := c.useCase.TotalDataTransactionVa(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
@@ -207,7 +193,7 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 	countInt := int(count)
 	totalPage := float64(countInt) / float64(limit)
 
-	datas, err := c.useCase.findVaByDatePagination(&req)
+	datas, err := c.useCase.findVaByDatePagination(accNo, startDate, endDate, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -250,14 +236,8 @@ func (c controller) findVaBydatePagination(accNo, startDate, endDate string, pag
 }
 
 func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.ResponseTransactionGiro, error) {
-	// transform request
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-	}
 
-	datas, err := c.useCase.findGiroByDate(&req)
+	datas, err := c.useCase.findGiroByDate(accNo, startDate, endDate)
 	if err != nil {
 		return nil, err
 	}
@@ -295,14 +275,9 @@ func (c controller) findGiroBydate(accNo, startDate, endDate string) (*response.
 }
 
 func (c controller) findVirtualAccountByByDate(accNo, startDate, endDate string) (*response.ResponseTransactionVitualAccount, error) {
-	// transform request
-	req := request.FillterTransactionByDate{
-		AccNo:     accNo,
-		StartDate: startDate,
-		EndDate:   endDate,
-	}
+
 	// call function for get data and checking error
-	datas, err := c.useCase.findVirtualAccountByDate(&req)
+	datas, err := c.useCase.findVirtualAccountByDate(accNo, startDate, endDate)
 
 	if err != nil {
 		return nil, err
