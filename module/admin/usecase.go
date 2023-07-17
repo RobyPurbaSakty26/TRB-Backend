@@ -55,19 +55,19 @@ func NewUseCase(repo AdminRepositoryInterface) UseCaseAdminInterface {
 }
 
 func (u useCase) getUserByEmail(email string, page, limit int) ([]entity.User, error) {
-	return u.repo.getUserByEmail(email, page, limit)
+	return u.repo.GetUserByEmail(email, page, limit)
 }
 
 func (u useCase) getUserByUsername(username string, page, limit int) ([]entity.User, error) {
-	return u.repo.getUserByUsername(username, page, limit)
+	return u.repo.GetUserByUsername(username, page, limit)
 }
 
 func (u useCase) totalGetUserByEmail(email string) (int64, error) {
-	return u.repo.totalGetUserByEmail(email)
+	return u.repo.TotalGetUserByEmail(email)
 }
 
 func (u useCase) totalGetUserByUsername(username string) (int64, error) {
-	return u.repo.totalGetUserByUsername(username)
+	return u.repo.TotalGetUserByUsername(username)
 }
 
 func (u useCase) TotalDataTransactionGiro(accNo, startDate, endDate string) (int64, error) {
@@ -83,19 +83,19 @@ func (u useCase) TotalDataUser() (int64, error) {
 }
 
 func (u useCase) findGiroByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionAccount, error) {
-	return u.repo.getGiroByDatePagination(accNo, startDate, endDate, limit, page)
+	return u.repo.GetGiroByDatePagination(accNo, startDate, endDate, limit, page)
 }
 
 func (u useCase) findVaByDatePagination(accNo, startDate, endDate string, limit, page int) ([]entity.TransactionVirtualAccount, error) {
-	return u.repo.getVaByDatePagination(accNo, startDate, endDate, limit, page)
+	return u.repo.GetVaByDatePagination(accNo, startDate, endDate, limit, page)
 }
 
 func (u useCase) findGiroByDate(accNo, startDate, endDate string) ([]entity.TransactionAccount, error) {
-	return u.repo.getGiroByDate(accNo, startDate, endDate)
+	return u.repo.GetGiroByDate(accNo, startDate, endDate)
 }
 
 func (u useCase) findVirtualAccountByDate(accNo, startDate, endDate string) ([]entity.TransactionVirtualAccount, error) {
-	return u.repo.getVirtualAccountByDate(accNo, startDate, endDate)
+	return u.repo.GetVirtualAccountByDate(accNo, startDate, endDate)
 }
 
 func (u useCase) GetListAccess() ([]string, error) {
